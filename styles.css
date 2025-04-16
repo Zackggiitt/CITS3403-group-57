@@ -55,6 +55,11 @@ body {
     color: var(--primary-color);
 }
 
+.nav-links a.active {
+    color: var(--primary-color);
+    font-weight: bold;
+}
+
 .login-btn,
 .signup-btn {
     padding: 0.5rem 1rem;
@@ -172,6 +177,24 @@ body {
 
 .card h3 {
     margin-bottom: 1rem;
+}
+
+.tool-link {
+    display: inline-block;
+    margin-top: 1rem;
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: bold;
+    transition: all 0.3s;
+}
+
+.tool-link:hover {
+    transform: translateX(5px);
+}
+
+.tool-link i {
+    font-size: 0.9rem;
+    margin-left: 5px;
 }
 
 /* About Section */
