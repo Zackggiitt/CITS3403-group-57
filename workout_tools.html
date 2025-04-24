@@ -200,6 +200,23 @@
             background-color: rgba(244, 67, 54, 0.1);
             color: #b71c1c;
         }
+
+        /* BMI Calculate Button */
+        .bmi-calculate-btn {
+            padding: 1rem 2rem;
+            background-color: var(--primary-color);
+            color: var(--white);
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .bmi-calculate-btn:hover {
+            background-color: #45a049;
+            transform: translateY(-2px);
+        }
     </style>
 </head>
 
@@ -286,7 +303,7 @@
                         </div>
                     </div>
                     
-                    <button class="cta-button" onclick="calculateBMI()">Calculate BMI</button>
+                    <button class="bmi-calculate-btn" onclick="calculateBMI()">Calculate BMI</button>
                 </div>
                 
                 <div id="bmi-result" class="bmi-result">
