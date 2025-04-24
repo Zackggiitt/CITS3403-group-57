@@ -77,6 +77,129 @@
             from { opacity: 1; }
             to { opacity: 0; }
         }
+
+        /* BMI Calculator Styles */
+        .tool-section {
+            display: none;
+            padding: 2rem;
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: var(--white);
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .bmi-calculator {
+            text-align: center;
+        }
+
+        .bmi-calculator h2 {
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .bmi-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            font-weight: bold;
+        }
+
+        .form-group input {
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        .toggle-btn {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .toggle-btn button {
+            padding: 0.5rem 1rem;
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .toggle-btn button.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .back-btn {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.7rem 1.5rem;
+            background-color: #f0f0f0;
+            color: var(--text-color);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background-color: #e0e0e0;
+        }
+
+        .bmi-result {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .bmi-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .bmi-category {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .bmi-info {
+            margin-top: 1rem;
+        }
+
+        .healthy {
+            background-color: rgba(76, 175, 80, 0.1);
+            color: #2e7d32;
+        }
+
+        .underweight {
+            background-color: rgba(33, 150, 243, 0.1);
+            color: #0d47a1;
+        }
+
+        .overweight {
+            background-color: rgba(255, 152, 0, 0.1);
+            color: #e65100;
+        }
+
+        .obese {
+            background-color: rgba(244, 67, 54, 0.1);
+            color: #b71c1c;
+        }
     </style>
 </head>
 
@@ -104,11 +227,12 @@
     <!-- Alert/Notification -->
     <div id="alert" class="alert">Coming Soon</div>
 
-    <!-- Tools Section -->
-    <section class="tools-section">
-        <div class="container">
+    <!-- Main Content Container -->
+    <div class="container" style="padding: 2rem 5%;">
+        <!-- Tools Section -->
+        <section id="tools-overview" class="tools-section">
             <div class="tools-container">
-                <div class="tool-card" onclick="showAlert('BMI Calculator')">
+                <div class="tool-card" onclick="showBmiCalculator()">
                     <i class="fas fa-calculator"></i>
                     <h3>BMI Calculator</h3>
                     <p>Calculate your Body Mass Index to track your fitness goals.</p>
@@ -120,8 +244,69 @@
                     <p>Track your daily calorie intake and expenditure.</p>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
+
+        <!-- BMI Calculator Section -->
+        <section id="bmi-calculator" class="tool-section">
+            <div class="bmi-calculator">
+                <h2>BMI Calculator</h2>
+                <p>Body Mass Index (BMI) is a measurement of a person's weight with respect to their height.</p>
+                
+                <div class="toggle-btn">
+                    <button id="metric-btn" class="active" onclick="switchUnit('metric')">Metric</button>
+                    <button id="imperial-btn" onclick="switchUnit('imperial')">Imperial</button>
+                </div>
+                
+                <div class="bmi-form">
+                    <!-- Metric Units (Default) -->
+                    <div id="metric-form">
+                        <div class="form-group">
+                            <label for="height-cm">Height (cm):</label>
+                            <input type="number" id="height-cm" placeholder="e.g., 175">
+                        </div>
+                        <div class="form-group">
+                            <label for="weight-kg">Weight (kg):</label>
+                            <input type="number" id="weight-kg" placeholder="e.g., 70">
+                        </div>
+                    </div>
+                    
+                    <!-- Imperial Units (Hidden by default) -->
+                    <div id="imperial-form" style="display: none;">
+                        <div class="form-group">
+                            <label for="height-ft">Height (feet):</label>
+                            <input type="number" id="height-ft" placeholder="e.g., 5">
+                        </div>
+                        <div class="form-group">
+                            <label for="height-in">Height (inches):</label>
+                            <input type="number" id="height-in" placeholder="e.g., 10">
+                        </div>
+                        <div class="form-group">
+                            <label for="weight-lb">Weight (pounds):</label>
+                            <input type="number" id="weight-lb" placeholder="e.g., 160">
+                        </div>
+                    </div>
+                    
+                    <button class="cta-button" onclick="calculateBMI()">Calculate BMI</button>
+                </div>
+                
+                <div id="bmi-result" class="bmi-result">
+                    <div class="bmi-value" id="bmi-value">0.0</div>
+                    <div class="bmi-category" id="bmi-category">Normal weight</div>
+                    <div class="bmi-info">
+                        <p>BMI Categories:</p>
+                        <p>Underweight: BMI less than 18.5</p>
+                        <p>Normal weight: BMI 18.5 to 24.9</p>
+                        <p>Overweight: BMI 25 to 29.9</p>
+                        <p>Obesity: BMI 30 or greater</p>
+                    </div>
+                </div>
+                
+                <button class="back-btn" onclick="showToolsOverview()">
+                    <i class="fas fa-arrow-left"></i> Back to Tools
+                </button>
+            </div>
+        </section>
+    </div>
 
     <!-- Footer -->
     <footer>
@@ -164,6 +349,109 @@
             setTimeout(function() {
                 alertDiv.style.display = 'none';
             }, 2000);
+        }
+
+        // Function to show BMI calculator
+        function showBmiCalculator() {
+            document.getElementById('tools-overview').style.display = 'none';
+            document.getElementById('bmi-calculator').style.display = 'block';
+            // Update header
+            document.querySelector('.tools-header h1').textContent = 'BMI Calculator';
+            document.querySelector('.tools-header p').textContent = 'Calculate your Body Mass Index to track your fitness goals';
+        }
+
+        // Function to show tools overview
+        function showToolsOverview() {
+            document.getElementById('bmi-calculator').style.display = 'none';
+            document.getElementById('tools-overview').style.display = 'block';
+            // Reset header
+            document.querySelector('.tools-header h1').textContent = 'Fitness Tools';
+            document.querySelector('.tools-header p').textContent = 'Use our specialized tools to enhance your fitness journey';
+            // Hide result if shown
+            document.getElementById('bmi-result').style.display = 'none';
+        }
+
+        // Function to switch between metric and imperial units
+        function switchUnit(unit) {
+            if (unit === 'metric') {
+                document.getElementById('metric-form').style.display = 'block';
+                document.getElementById('imperial-form').style.display = 'none';
+                document.getElementById('metric-btn').classList.add('active');
+                document.getElementById('imperial-btn').classList.remove('active');
+            } else {
+                document.getElementById('metric-form').style.display = 'none';
+                document.getElementById('imperial-form').style.display = 'block';
+                document.getElementById('metric-btn').classList.remove('active');
+                document.getElementById('imperial-btn').classList.add('active');
+            }
+        }
+
+        // Function to calculate BMI
+        function calculateBMI() {
+            let bmi;
+            let height;
+            let weight;
+            
+            // Check which unit is active
+            if (document.getElementById('metric-btn').classList.contains('active')) {
+                // Metric calculation
+                height = parseFloat(document.getElementById('height-cm').value) / 100; // convert cm to m
+                weight = parseFloat(document.getElementById('weight-kg').value);
+                
+                // Validate inputs
+                if (!height || !weight || height <= 0 || weight <= 0) {
+                    alert('Please enter valid height and weight values');
+                    return;
+                }
+                
+                bmi = weight / (height * height);
+            } else {
+                // Imperial calculation
+                const heightFt = parseFloat(document.getElementById('height-ft').value) || 0;
+                const heightIn = parseFloat(document.getElementById('height-in').value) || 0;
+                weight = parseFloat(document.getElementById('weight-lb').value);
+                
+                // Validate inputs
+                if ((!heightFt && !heightIn) || !weight || weight <= 0) {
+                    alert('Please enter valid height and weight values');
+                    return;
+                }
+                
+                // Convert height to inches total
+                const totalHeightInches = (heightFt * 12) + heightIn;
+                
+                // BMI formula for imperial: (weight in pounds / (height in inches)²) × 703
+                bmi = (weight / (totalHeightInches * totalHeightInches)) * 703;
+            }
+            
+            // Round to 1 decimal place
+            bmi = Math.round(bmi * 10) / 10;
+            
+            // Display result
+            const resultDiv = document.getElementById('bmi-result');
+            const bmiValue = document.getElementById('bmi-value');
+            const bmiCategory = document.getElementById('bmi-category');
+            
+            bmiValue.textContent = bmi;
+            
+            // Set BMI category and color
+            resultDiv.className = 'bmi-result';
+            if (bmi < 18.5) {
+                bmiCategory.textContent = 'Underweight';
+                resultDiv.classList.add('underweight');
+            } else if (bmi < 25) {
+                bmiCategory.textContent = 'Normal weight';
+                resultDiv.classList.add('healthy');
+            } else if (bmi < 30) {
+                bmiCategory.textContent = 'Overweight';
+                resultDiv.classList.add('overweight');
+            } else {
+                bmiCategory.textContent = 'Obese';
+                resultDiv.classList.add('obese');
+            }
+            
+            // Show result
+            resultDiv.style.display = 'block';
         }
     </script>
 </body>
