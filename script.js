@@ -45,6 +45,23 @@ if (signupBtn) {
     });
 }
 
+//Toggle password visibility
+function togglePasswordVisibility() {
+    const passwordInput = document.getElementById('password');
+    const toggleIcon = document.querySelector('.toggle-password');
+
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text'; 
+        toggleIcon.classList.remove('fa-eye');  
+        toggleIcon.classList.add('fa-eye-slash'); 
+        passwordInput.style.paddingLeft = '35px'; 
+    } else {
+        passwordInput.type = 'password'; 
+        toggleIcon.classList.remove('fa-eye-slash'); 
+        toggleIcon.classList.add('fa-eye'); 
+    }
+}
+
 // CTA button functionality
 const ctaButton = document.querySelector('.cta-button');
 if (ctaButton) {

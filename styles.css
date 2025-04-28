@@ -60,8 +60,7 @@ body {
     font-weight: bold;
 }
 
-.login-btn,
-.signup-btn {
+.login-btn, .signup-btn {
     padding: 0.5rem 1rem;
     border-radius: 5px;
     cursor: pointer;
@@ -134,6 +133,273 @@ body {
 .cta-button:hover {
     background-color: #45a049;
     transform: translateY(-2px);
+}
+
+/* Login Page */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: var(--light-gray);
+}
+
+.login-form {
+    background-color: var(--white);
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+}
+
+.login-form h2 {
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.login-form .form-group {
+    margin-bottom: 1.5rem;
+}
+
+.login-form .form-group label {
+    font-weight: bold;
+    display: block; 
+    margin-bottom: 0.5rem;
+}
+
+.login-form .input-container {
+    position: relative;
+    width: 100%;
+}
+
+.login-form .input-container .icon {
+    position: absolute;
+    top: 50%;
+    left: 10px;
+    transform: translateY(-50%);
+    color: #aaa;
+    font-size: 16px;
+}
+
+.login-form .input-container input {
+    width: 100%;
+    padding: 10px 35px 10px 35px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.login-form .form-group input:focus {
+    border-color: var(--primary-color); 
+    outline: none; 
+}
+
+.login-form .input-container .toggle-password {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #aaa;
+    font-size: 18px;
+}
+
+.login-form .input-container .toggle-password:hover {
+    color: #333;
+}
+
+.login-form .remember-me {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 1.5rem;
+}
+
+.login-form .remember-me input {
+    margin-right: 0.5rem;
+}
+
+.login-form .remember-me input[type="checkbox"] {
+    width: 15px;
+    height: 15px;
+    margin-top: -4px;
+}
+
+.login-form .submit-btn {
+    width: 100%;
+    padding: 1rem;
+    background-color: var(--primary-color); 
+    color: var(--white); 
+    border: none;
+    border-radius: 5px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s; 
+}
+
+.login-form .submit-btn:hover {
+    background-color: #45a049; 
+    transform: translateY(-2px); 
+}
+
+.login-form .link {
+    text-align: center;
+    margin-top: 1rem;
+}
+
+.login-form .link a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: bold;
+    transition: all 0.3s;
+}
+
+.login-form .link a:hover {
+    text-decoration: underline;
+}
+
+.login-form .forgot-password {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: bold;
+    transition: all 0.3s;
+}
+
+.login-form .forgot-password:hover {
+    text-decoration: underline;
+}
+
+/* Sign Up Page */
+.signup-container {
+    max-width: 600px;
+    margin: 50px auto;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    margin-top: 170px; 
+}
+
+.signup-form h2 {
+    text-align: center;
+    color: var(--primary-color);
+    margin-bottom: 20px;
+}
+
+.signup-form .form-group {
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+.signup-form .form-group label {
+    font-size: 14px;
+    color: #333;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.signup-form .form-group input {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    outline: none;
+    transition: border-color 0.3s;
+    box-sizing: border-box;
+}
+
+.signup-form .form-group input:focus {
+    border-color: #0066cc;
+}
+
+.signup-form .input-container {
+    position: relative;
+}
+
+.signup-form .input-container .icon {
+    position: absolute;
+    top: 50%;
+    left: 10px;
+    transform: translateY(-50%);
+    color: #aaa;
+}
+
+.signup-form .input-container input {
+    padding-left: 30px;
+}
+
+.signup-form .toggle-password {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #aaa;
+    font-size: 16px;
+}
+
+.signup-form .form-group:nth-child(2),
+.signup-form .form-group:nth-child(3) {
+    display: inline-block;
+}
+
+.signup-form .form-group:nth-child(2) {
+    width: 48%;
+}
+
+.signup-form .form-group:nth-child(3) {
+    width: 48%;
+    margin-left: 3%;
+}
+
+.signup-form .submit-btn {
+    width: 100%;
+    padding: 12px;
+    background-color: #45a049;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.signup-form .submit-btn:hover {
+    background-color: #45a049;
+}
+
+.signup-form .link {
+    text-align: center;
+    margin-top: 10px;
+}
+
+.signup-form .link a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.signup-form .link a:hover {
+    text-decoration: underline;
+}
+
+@media screen and (max-width: 768px) {
+    .signup-container {
+        margin: 20px;
+        padding: 15px;
+    }
+
+    .signup-form .form-group:first-child,
+    .signup-form .form-group:nth-child(2) {
+        width: 100%;
+        display: block;
+        margin-right: 0;
+    }
 }
 
 /* Features Section */
@@ -263,6 +529,190 @@ body {
     background-color: #45a049;
 }
 
+/* Posts Page Styles */
+.posts-header {
+    text-align: center;
+    padding: 10rem 5% 4rem;
+    background-color: var(--light-gray);
+    background-image: url("/src/pic/header_background.png");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.posts-header h1 {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.posts-container {
+    padding: 2rem 5% 5rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    min-height: 400px;
+}
+
+/* Style for the actions area (create button) */
+.posts-actions {
+    display: flex;
+    justify-content: flex-end; /* Align button to the right */
+    margin-bottom: 2rem;
+}
+
+.create-post-btn {
+    padding: 0.75rem 1.5rem;
+    background-color: var(--primary-color);
+    color: var(--white);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    display: inline-flex; /* Use inline-flex for icon alignment */
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s;
+}
+
+.create-post-btn:hover {
+    background-color: #45a049;
+    transform: translateY(-2px);
+}
+
+.post-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 300px;
+    text-align: center;
+    color: #888;
+    font-size: 1.2rem;
+    background-color: var(--white);
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Modal Styles */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1001; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgba(0, 0, 0, 0.6); /* Black w/ opacity */
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 10% auto; /* 10% from the top and centered */
+    padding: 20px 30px;
+    border: 1px solid #888;
+    width: 80%; /* Could be more or less, depending on screen size */
+    max-width: 600px; /* Maximum width */
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.modal-header h2 {
+    margin: 0;
+    color: var(--primary-color);
+}
+
+.close-btn {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.close-btn:hover,
+.close-btn:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.modal-body {
+    padding: 20px 0;
+}
+
+/* Form styles within the modal */
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+}
+
+.form-group input[type="text"],
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+    box-sizing: border-box; /* Include padding and border in element's total width and height */
+}
+
+.form-group textarea {
+    resize: vertical; /* Allow vertical resizing */
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+    gap: 0.5rem;
+}
+
+.modal-footer button {
+    padding: 0.6rem 1.2rem;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.3s;
+}
+
+.submit-btn {
+    background-color: var(--primary-color);
+    color: var(--white);
+    border: none;
+}
+
+.submit-btn:hover {
+    background-color: #45a049;
+}
+
+.cancel-btn {
+    background-color: #f1f1f1;
+    color: var(--text-color);
+    border: 1px solid #ccc;
+}
+
+.cancel-btn:hover {
+    background-color: #e1e1e1;
+}
+
 /* Footer */
 footer {
     background-color: #333;
@@ -328,5 +778,175 @@ footer {
 
     .feature-cards {
         flex-direction: column;
+    }
+}
+
+/* Profile Page Styles */
+.profile-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 6rem 1rem 2rem;
+}
+
+.profile-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.profile-picture-container {
+    position: relative;
+    width: 150px;
+    height: 150px;
+    margin: 0 auto 1.5rem;
+}
+
+.profile-picture {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid #4CAF50;
+}
+
+.profile-name {
+    font-size: 2rem;
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+
+.profile-bio {
+    color: #666;
+    font-size: 1.1rem;
+}
+
+.stats-container {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid #eee;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-item i {
+    font-size: 2rem;
+    color: #4CAF50;
+    margin-bottom: 1rem;
+}
+
+.stat-item h3 {
+    color: #333;
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.stat-number {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #4CAF50;
+    margin-bottom: 0.25rem;
+}
+
+.stat-category {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.stats-charts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    padding: 1rem;
+}
+
+.chart-container {
+    background: #f8f8f8;
+    padding: 1.5rem;
+    border-radius: 8px;
+}
+
+.chart-container h3 {
+    color: #333;
+    margin-bottom: 1rem;
+    text-align: center;
+    font-size: 1.2rem;
+}
+
+.profile-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.edit-profile-btn,
+.share-profile-btn {
+    padding: 0.8rem 1.5rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background-color 0.3s;
+}
+
+.edit-profile-btn {
+    background: #4CAF50;
+    color: white;
+}
+
+.share-profile-btn {
+    background: #f0f0f0;
+    color: #333;
+}
+
+.edit-profile-btn:hover {
+    background: #45a049;
+}
+
+.share-profile-btn:hover {
+    background: #e0e0e0;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .stats-charts {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .profile-actions {
+        flex-direction: column;
+    }
+    
+    .edit-profile-btn,
+    .share-profile-btn {
+        width: 100%;
+        justify-content: center;
     }
 }

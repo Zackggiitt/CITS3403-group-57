@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitPal - Community Posts</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="logo">FitPal</div>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="index.html#features">Features</a>
+            <a href="workout_tools.html">Tools</a>
+            <a href="posts.html" class="active">Posts</a>
+            <a href="index.html#about">About</a>
+            <a href="index.html#contact">Contact</a>
+            <a href="login.html">
+                <button class="login-btn">Login</button>
+            </a>
+            <a href="signup.html">
+                <button class="signup-btn">Sign Up</button>
+            </a>   
+        </div>
+    </nav>
+
+    <!-- Posts Header -->
+    <header class="posts-header">
+        <h1>Community Posts</h1>
+        <p>Coming Soon</p>
+    </header>
+
+    <!-- Posts Section -->
+    <section class="posts-container">
+        <!-- Post Actions: Button to trigger modal -->
+        <div class="posts-actions">
+            <button class="create-post-btn" id="createPostBtn"><i class="fas fa-plus"></i> Create New Post</button>
+            <!-- Filter might be added back later if needed -->
+        </div>
+
+        <!-- Post Placeholder -->
+        <div class="post-placeholder">
+            <p>This page is under development</p>
+            <!-- Icon can be added here if desired -->
+        </div>
+    </section>
+
+    <!-- Create Post Modal -->
+    <div id="createPostModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create New Post</h2>
+                <button class="close-btn" id="closeModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="createPostForm">
+                    <div class="form-group">
+                        <label for="postTitle">Title</label>
+                        <input type="text" id="postTitle" name="postTitle" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="postCategory">Category</label>
+                        <select id="postCategory" name="postCategory">
+                            <option value="workout">Workout Tips</option>
+                            <option value="nutrition">Nutrition</option>
+                            <option value="story">Success Stories</option>
+                            <option value="general">General Discussion</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="postContent">Content</label>
+                        <textarea id="postContent" name="postContent" rows="6" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" form="createPostForm" class="submit-btn">Post</button>
+                <button type="button" class="cancel-btn" id="cancelModalBtn">Cancel</button>
+            </div>
+        </div>
+    </div>
+    <!-- End Create Post Modal -->
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>FitPal</h3>
+                <p>Your personal fitness companion</p>
+            </div>
+            <div class="footer-section">
+                <h3>Quick Links</h3>
+                <a href="index.html">Home</a>
+                <a href="index.html#features">Features</a>
+                <a href="index.html#about">About</a>
+                <a href="index.html#contact">Contact</a>
+            </div>
+            <div class="footer-section">
+                <h3>Connect With Us</h3>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-facebook"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 FitPal. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+
+</html> 
