@@ -6,7 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FitPal - Workout Tools</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="workout_tools.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Add custom styles for tools page -->
     <style>
         .tools-container {
@@ -16,7 +18,7 @@
             gap: 2rem;
             margin-top: 2rem;
         }
-        
+
         .tool-card {
             background-color: var(--white);
             border-radius: 10px;
@@ -27,24 +29,24 @@
             transition: transform 0.3s;
             cursor: pointer;
         }
-        
+
         .tool-card:hover {
             transform: translateY(-10px);
         }
-        
+
         .tool-card i {
             font-size: 3rem;
             color: var(--primary-color);
             margin-bottom: 1rem;
         }
-        
+
         .tools-header {
             padding-top: 7rem;
             text-align: center;
             background-color: var(--light-gray);
             padding-bottom: 2rem;
         }
-        
+
         .tools-header h1 {
             color: var(--primary-color);
             font-size: 2.5rem;
@@ -69,13 +71,23 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
         }
 
         @keyframes fadeOut {
-            from { opacity: 1; }
-            to { opacity: 0; }
+            from {
+                opacity: 1;
+            }
+
+            to {
+                opacity: 0;
+            }
         }
 
         /* Calculator Styles (Shared between BMI and BMR) */
@@ -235,7 +247,7 @@
     <nav class="navbar">
         <div class="logo">FitPal</div>
         <div class="nav-links">
-            <a href="index.html#home">Home</a>
+            <a href="index.html">Home</a>
             <a href="index.html#features">Features</a>
             <a href="workout_tools.html" class="active">Tools</a>
             <a href="index.html#about">About</a>
@@ -260,7 +272,7 @@
 
     <!-- Main Content Container -->
     <div class="container" style="padding: 2rem 5%;">
-        <!-- Tools Section -->
+        <!-- Tools Overview Section -->
         <section id="tools-overview" class="tools-section">
             <div class="tools-container">
                 <div class="tool-card" onclick="showCalculator('bmi')">
@@ -274,7 +286,128 @@
                     <h3>BMR Calculator</h3>
                     <p>Calculate your Basal Metabolic Rate to understand how many calories your body burns each day at rest.</p>
                 </div>
+
+                <div class="tool-card" onclick="showWorkoutTools()">
+                    <i class="fas fa-dumbbell"></i>
+                    <h3>Workout Tools</h3>
+                    <p>Access exercise library, workout planner, and calorie tracker.</p>
+                </div>
             </div>
+        </section>
+
+        <!-- Workout Tools Section -->
+        <section id="workout-tools" class="workout-tools-container" style="display: none;">
+            <!-- Exercise Categories -->
+            <section class="exercise-categories">
+                <h2>Exercise Categories</h2>
+                <div class="category-grid">
+                    <div class="category-card" data-category="chest">
+                        <i class="fas fa-dumbbell"></i>
+                        <h3>Chest</h3>
+                        <p>Build a strong and defined chest</p>
+                    </div>
+                    <div class="category-card" data-category="back">
+                        <i class="fas fa-dumbbell"></i>
+                        <h3>Back</h3>
+                        <p>Develop a powerful back</p>
+                    </div>
+                    <div class="category-card" data-category="shoulders">
+                        <i class="fas fa-dumbbell"></i>
+                        <h3>Shoulders</h3>
+                        <p>Build strong, defined shoulders</p>
+                    </div>
+                    <div class="category-card" data-category="arms">
+                        <i class="fas fa-dumbbell"></i>
+                        <h3>Arms</h3>
+                        <p>Develop strong arms</p>
+                    </div>
+                    <div class="category-card" data-category="legs">
+                        <i class="fas fa-dumbbell"></i>
+                        <h3>Legs</h3>
+                        <p>Build powerful legs</p>
+                    </div>
+                    <div class="category-card" data-category="core">
+                        <i class="fas fa-dumbbell"></i>
+                        <h3>Core</h3>
+                        <p>Strengthen your core</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Exercise List -->
+            <section class="exercise-list">
+                <h2>Exercise Library</h2>
+                <div class="exercise-filters">
+                    <select id="category-filter">
+                        <option value="all">All Categories</option>
+                        <option value="chest">Chest</option>
+                        <option value="back">Back</option>
+                        <option value="shoulders">Shoulders</option>
+                        <option value="arms">Arms</option>
+                        <option value="legs">Legs</option>
+                        <option value="core">Core</option>
+                    </select>
+                    <input type="text" id="exercise-search" placeholder="Search exercises...">
+                </div>
+                <div class="exercises-grid" id="exercises-container">
+                    <!-- Exercises will be dynamically loaded here -->
+                </div>
+            </section>
+
+            <!-- Calorie Calculator -->
+            <section class="calorie-calculator">
+                <h2>Calorie Calculator</h2>
+                <div class="calculator-container">
+                    <form id="calorie-calculator-form">
+                        <div class="form-group">
+                            <label for="weight">Weight (kg):</label>
+                            <input type="number" id="weight" name="weight" required min="30" max="200">
+                        </div>
+                        <div class="form-group">
+                            <label for="duration">Duration (minutes):</label>
+                            <input type="number" id="duration" name="duration" required min="1" max="300">
+                        </div>
+                        <div class="form-group">
+                            <label for="intensity">Intensity:</label>
+                            <select id="intensity" name="intensity" required>
+                                <option value="low">Low</option>
+                                <option value="moderate">Moderate</option>
+                                <option value="high">High</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="calculate-btn">Calculate Calories</button>
+                    </form>
+                    <div id="calories-result-container" style="display: none;">
+                        <h3>Estimated Calories Burned:</h3>
+                        <p id="calories-result">0</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Workout Planner -->
+            <section class="workout-planner">
+                <h2>Weekly Workout Planner</h2>
+                <div class="planner-container">
+                    <div class="calendar">
+                        <div class="week-days">
+                            <div class="day" data-day="monday">Monday</div>
+                            <div class="day" data-day="tuesday">Tuesday</div>
+                            <div class="day" data-day="wednesday">Wednesday</div>
+                            <div class="day" data-day="thursday">Thursday</div>
+                            <div class="day" data-day="friday">Friday</div>
+                            <div class="day" data-day="saturday">Saturday</div>
+                            <div class="day" data-day="sunday">Sunday</div>
+                        </div>
+                        <div class="workout-slots" id="workout-slots">
+                            <!-- Workout slots will be dynamically loaded here -->
+                        </div>
+                    </div>
+                    <div class="calorie-tracker">
+                        <h3>Weekly Calorie Burn</h3>
+                        <canvas id="calorieChart"></canvas>
+                    </div>
+                </div>
+            </section>
         </section>
 
         <!-- BMI Calculator Section -->
@@ -424,6 +557,30 @@
         </section>
     </div>
 
+    <!-- Exercise Modal -->
+    <div class="modal" id="exercise-modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div class="exercise-details">
+                <h2 id="modal-exercise-name"></h2>
+                <div class="exercise-info">
+                    <div class="exercise-video">
+                        <iframe id="exercise-video" width="100%" height="315" frameborder="0" allowfullscreen></iframe>
+                    </div>
+                    <div class="exercise-description">
+                        <h3>Instructions</h3>
+                        <p id="modal-exercise-instructions"></p>
+                        <h3>Muscles Worked</h3>
+                        <p id="modal-exercise-muscles"></p>
+                        <h3>Calories Burned (per set)</h3>
+                        <p id="modal-exercise-calories"></p>
+                    </div>
+                </div>
+                <button class="add-to-workout">Add to Workout</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer>
         <div class="footer-content">
@@ -453,52 +610,48 @@
         </div>
     </footer>
 
-    <script src="script.js"></script>
+    <script src="workout_tools.js"></script>
     <script>
-        // Function to show the alert with tool name
-        function showAlert(toolName) {
-            const alertDiv = document.getElementById('alert');
-            alertDiv.textContent = toolName + " - Coming Soon";
-            alertDiv.style.display = 'block';
-            
-            // Hide the alert after 2 seconds
-            setTimeout(function() {
-                alertDiv.style.display = 'none';
-            }, 2000);
-        }
-
-        // Function to show calculator section
-        function showCalculator(type) {
+        // Function to show workout tools
+        function showWorkoutTools() {
             document.getElementById('tools-overview').style.display = 'none';
+            document.getElementById('bmi-calculator').style.display = 'none';
+            document.getElementById('bmr-calculator').style.display = 'none';
+            document.getElementById('workout-tools').style.display = 'block';
             
-            if (type === 'bmi') {
-                document.getElementById('bmi-calculator').style.display = 'block';
-                document.getElementById('bmr-calculator').style.display = 'none';
-                // Update header
-                document.querySelector('.tools-header h1').textContent = 'BMI Calculator';
-                document.querySelector('.tools-header p').textContent = 'Calculate your Body Mass Index to track your fitness goals';
-            } else if (type === 'bmr') {
-                document.getElementById('bmi-calculator').style.display = 'none';
-                document.getElementById('bmr-calculator').style.display = 'block';
-                // Update header
-                document.querySelector('.tools-header h1').textContent = 'BMR Calculator';
-                document.querySelector('.tools-header p').textContent = 'Calculate your daily calorie expenditure based on activity level';
-            }
+            // Update header
+            document.querySelector('.tools-header h1').textContent = 'Workout Tools';
+            document.querySelector('.tools-header p').textContent = 'Access exercise library, workout planner, and calorie tracker';
         }
 
         // Function to show tools overview
         function showToolsOverview() {
             document.getElementById('bmi-calculator').style.display = 'none';
             document.getElementById('bmr-calculator').style.display = 'none';
+            document.getElementById('workout-tools').style.display = 'none';
             document.getElementById('tools-overview').style.display = 'block';
             
             // Reset header
             document.querySelector('.tools-header h1').textContent = 'Fitness Tools';
             document.querySelector('.tools-header p').textContent = 'Use our specialized tools to enhance your fitness journey';
+        }
+
+        // Function to show calculator
+        function showCalculator(type) {
+            document.getElementById('tools-overview').style.display = 'none';
+            document.getElementById('workout-tools').style.display = 'none';
             
-            // Hide results
-            document.getElementById('bmi-result').style.display = 'none';
-            document.getElementById('bmr-result').style.display = 'none';
+            if (type === 'bmi') {
+                document.getElementById('bmi-calculator').style.display = 'block';
+                document.getElementById('bmr-calculator').style.display = 'none';
+                document.querySelector('.tools-header h1').textContent = 'BMI Calculator';
+                document.querySelector('.tools-header p').textContent = 'Calculate your Body Mass Index to track your fitness goals';
+            } else if (type === 'bmr') {
+                document.getElementById('bmi-calculator').style.display = 'none';
+                document.getElementById('bmr-calculator').style.display = 'block';
+                document.querySelector('.tools-header h1').textContent = 'BMR Calculator';
+                document.querySelector('.tools-header p').textContent = 'Calculate your daily calorie expenditure based on activity level';
+            }
         }
 
         // Function to switch between metric and imperial units
@@ -676,4 +829,4 @@
     </script>
 </body>
 
-</html> 
+</html>
