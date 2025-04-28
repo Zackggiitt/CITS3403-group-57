@@ -3,7 +3,7 @@ const exercises = {
     chest: [
         {
             name: "Bench Press",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/3837757/pexels-photo-3837757.jpeg",
             video: "https://www.youtube.com/embed/rT7DgCr-3pg",
             instructions: "1. Lie on bench with feet flat\n2. Grip bar slightly wider than shoulders\n3. Lower bar to mid-chest\n4. Press up until arms are straight",
             muscles: "Pectoralis Major, Triceps, Anterior Deltoids",
@@ -11,7 +11,7 @@ const exercises = {
         },
         {
             name: "Dumbbell Bench Press",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/1954524/pexels-photo-1954524.jpeg",
             video: "https://www.youtube.com/embed/VmB1G1K7v94",
             instructions: "1. Lie on bench with dumbbells at chest\n2. Press dumbbells up until arms straight\n3. Lower with control\n4. Keep wrists straight",
             muscles: "Pectoralis Major, Triceps, Anterior Deltoids",
@@ -19,7 +19,7 @@ const exercises = {
         },
         {
             name: "Incline Bench Press",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/3076516/pexels-photo-3076516.jpeg",
             video: "https://www.youtube.com/embed/8iPEnn-ltC8",
             instructions: "1. Set bench to 30-45 degree angle\n2. Grip bar slightly wider than shoulders\n3. Lower bar to upper chest\n4. Press up until arms straight",
             muscles: "Upper Pectoralis, Anterior Deltoids",
@@ -27,7 +27,7 @@ const exercises = {
         },
         {
             name: "Decline Bench Press",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/3837758/pexels-photo-3837758.jpeg",
             video: "https://www.youtube.com/embed/LfyQBUKR8SE",
             instructions: "1. Set bench to 15-30 degree decline\n2. Grip bar slightly wider than shoulders\n3. Lower bar to lower chest\n4. Press up until arms straight",
             muscles: "Lower Pectoralis, Triceps",
@@ -35,7 +35,7 @@ const exercises = {
         },
         {
             name: "Dumbbell Flyes",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/3837759/pexels-photo-3837759.jpeg",
             video: "https://www.youtube.com/embed/eozdVDA78K0",
             instructions: "1. Lie on bench with dumbbells above chest\n2. Lower arms in arc motion\n3. Keep slight bend in elbows\n4. Return to start position",
             muscles: "Pectoralis Major, Anterior Deltoids",
@@ -43,7 +43,7 @@ const exercises = {
         },
         {
             name: "Chest Press Machine",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/3837760/pexels-photo-3837760.jpeg",
             video: "https://www.youtube.com/embed/taI4XduLpTk",
             instructions: "1. Adjust seat height\n2. Grip handles at chest level\n3. Press handles forward\n4. Control return to start",
             muscles: "Pectoralis Major, Triceps",
@@ -51,7 +51,7 @@ const exercises = {
         },
         {
             name: "Pec Deck / Chest Fly Machine",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/3837761/pexels-photo-3837761.jpeg",
             video: "https://www.youtube.com/embed/eaTpDgG2Lug",
             instructions: "1. Adjust seat height\n2. Place forearms on pads\n3. Bring arms together\n4. Control return to start",
             muscles: "Pectoralis Major, Anterior Deltoids",
@@ -59,7 +59,7 @@ const exercises = {
         },
         {
             name: "Dips for Chest",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/3837762/pexels-photo-3837762.jpeg",
             video: "https://www.youtube.com/embed/2z8JmcrW-As",
             instructions: "1. Support body on parallel bars\n2. Lean forward slightly\n3. Lower body until shoulders below elbows\n4. Push back up",
             muscles: "Lower Pectoralis, Triceps, Anterior Deltoids",
@@ -67,7 +67,7 @@ const exercises = {
         },
         {
             name: "Push-ups",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/176782/pexels-photo-176782.jpeg",
             video: "https://www.youtube.com/embed/IODxDxX7oi4",
             instructions: "1. Start in plank position\n2. Lower body until chest nearly touches ground\n3. Push back up to start\n4. Keep core engaged",
             muscles: "Pectoralis Major, Triceps, Core",
@@ -75,7 +75,7 @@ const exercises = {
         },
         {
             name: "Incline Push-ups",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/3837764/pexels-photo-3837764.jpeg",
             video: "https://www.youtube.com/embed/3WDI0pCzEnA",
             instructions: "1. Place hands on elevated surface\n2. Keep body straight\n3. Lower chest to surface\n4. Push back up",
             muscles: "Upper Pectoralis, Triceps, Core",
@@ -85,7 +85,7 @@ const exercises = {
     back: [
         {
             name: "Pull-ups",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/2294361/pexels-photo-2294361.jpeg",
             video: "https://www.youtube.com/embed/eGo4IYlbE5g",
             instructions: "1. Hang from bar with overhand grip\n2. Pull body up until chin clears bar\n3. Lower with control\n4. Keep core engaged",
             muscles: "Latissimus Dorsi, Biceps, Trapezius",
@@ -93,7 +93,7 @@ const exercises = {
         },
         {
             name: "Lat Pulldown",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/3837765/pexels-photo-3837765.jpeg",
             video: "https://www.youtube.com/embed/CAZ7EGqv4Go",
             instructions: "1. Sit with thighs under pads\n2. Pull bar to upper chest\n3. Control return to start\n4. Keep chest up",
             muscles: "Latissimus Dorsi, Biceps, Trapezius",
@@ -101,7 +101,7 @@ const exercises = {
         },
         {
             name: "Barbell Row",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/3837766/pexels-photo-3837766.jpeg",
             video: "https://www.youtube.com/embed/9EGnuK5hJ9c",
             instructions: "1. Bend at hips with back straight\n2. Pull barbell to lower chest\n3. Lower with control\n4. Keep core engaged",
             muscles: "Latissimus Dorsi, Rhomboids, Trapezius",
@@ -109,7 +109,7 @@ const exercises = {
         },
         {
             name: "Dumbbell Row",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/1954524/pexels-photo-1954524.jpeg",
             video: "https://www.youtube.com/embed/roCP6wCXPqo",
             instructions: "1. Place hand and knee on bench\n2. Pull dumbbell to hip\n3. Lower with control\n4. Keep back straight",
             muscles: "Latissimus Dorsi, Rhomboids, Trapezius",
@@ -117,7 +117,7 @@ const exercises = {
         },
         {
             name: "Seated Cable Row",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/3837768/pexels-photo-3837768.jpeg",
             video: "https://www.youtube.com/embed/GZbfZ033f74",
             instructions: "1. Sit with feet on platform\n2. Pull handle to abdomen\n3. Squeeze shoulder blades\n4. Control return",
             muscles: "Latissimus Dorsi, Rhomboids, Trapezius",
@@ -125,7 +125,7 @@ const exercises = {
         },
         {
             name: "T-Bar Row",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/3837769/pexels-photo-3837769.jpeg",
             video: "https://www.youtube.com/embed/j3Igk5nyZEI",
             instructions: "1. Stand over T-bar\n2. Pull weight to chest\n3. Lower with control\n4. Keep back straight",
             muscles: "Latissimus Dorsi, Rhomboids, Trapezius",
@@ -133,7 +133,7 @@ const exercises = {
         },
         {
             name: "Deadlift",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/841130/pexels-photo-841130.jpeg",
             video: "https://www.youtube.com/embed/1ZXobu7JvvE",
             instructions: "1. Stand with feet hip-width\n2. Bend at hips and knees\n3. Lift bar by extending hips\n4. Lower with control",
             muscles: "Hamstrings, Glutes, Lower Back",
@@ -141,7 +141,7 @@ const exercises = {
         },
         {
             name: "Reverse Flyes",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/3837771/pexels-photo-3837771.jpeg",
             video: "https://www.youtube.com/embed/eaTpDgG2Lug",
             instructions: "1. Bend at hips with dumbbells\n2. Raise arms to sides\n3. Squeeze shoulder blades\n4. Lower with control",
             muscles: "Rear Deltoids, Trapezius, Rhomboids",
@@ -149,7 +149,7 @@ const exercises = {
         },
         {
             name: "Superman",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/3837772/pexels-photo-3837772.jpeg",
             video: "https://www.youtube.com/embed/cc6UVRS7PW4",
             instructions: "1. Lie face down\n2. Lift arms and legs\n3. Hold position\n4. Lower with control",
             muscles: "Lower Back, Glutes, Hamstrings",
@@ -157,7 +157,7 @@ const exercises = {
         },
         {
             name: "Face Pull",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/3837773/pexels-photo-3837773.jpeg",
             video: "https://www.youtube.com/embed/rep-qVOkqgk",
             instructions: "1. Use rope attachment on cable\n2. Pull towards face\n3. Squeeze shoulder blades\n4. Control return",
             muscles: "Rear Deltoids, Trapezius, Rhomboids",
@@ -167,7 +167,7 @@ const exercises = {
     shoulders: [
         {
             name: "Lateral Raises",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/3837774/pexels-photo-3837774.jpeg",
             video: "https://www.youtube.com/embed/3VfM1HBK_0w",
             instructions: "1. Hold dumbbells at sides\n2. Raise arms to shoulder height\n3. Lower with control\n4. Keep slight bend in elbows",
             muscles: "Lateral Deltoids, Trapezius",
@@ -175,7 +175,7 @@ const exercises = {
         },
         {
             name: "Front Raises",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/3837775/pexels-photo-3837775.jpeg",
             video: "https://www.youtube.com/embed/-t7fuZ0KhDA",
             instructions: "1. Hold dumbbells in front\n2. Raise arms to shoulder height\n3. Lower with control\n4. Keep slight bend in elbows",
             muscles: "Anterior Deltoids, Upper Chest",
@@ -183,7 +183,7 @@ const exercises = {
         },
         {
             name: "Dumbbell Shoulder Press",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/1954524/pexels-photo-1954524.jpeg",
             video: "https://www.youtube.com/embed/qEwKCR5JCog",
             instructions: "1. Hold dumbbells at shoulders\n2. Press overhead until arms straight\n3. Lower with control\n4. Keep core tight",
             muscles: "Deltoids, Triceps, Upper Chest",
@@ -191,7 +191,7 @@ const exercises = {
         },
         {
             name: "Barbell Overhead Press",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/3837777/pexels-photo-3837777.jpeg",
             video: "https://www.youtube.com/embed/2yjwXTZQDDI",
             instructions: "1. Hold barbell at shoulder level\n2. Press overhead until arms straight\n3. Lower with control\n4. Keep core tight",
             muscles: "Deltoids, Triceps, Upper Chest",
@@ -199,7 +199,7 @@ const exercises = {
         },
         {
             name: "Arnold Press",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/3837778/pexels-photo-3837778.jpeg",
             video: "https://www.youtube.com/embed/6Z15HBGQD3c",
             instructions: "1. Start with palms facing you\n2. Rotate arms as you press\n3. Lower with rotation\n4. Keep core tight",
             muscles: "Deltoids, Triceps, Upper Chest",
@@ -207,7 +207,7 @@ const exercises = {
         },
         {
             name: "Dumbbell Shrugs",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/3837779/pexels-photo-3837779.jpeg",
             video: "https://www.youtube.com/embed/cJRVVxmytaM",
             instructions: "1. Hold dumbbells at sides\n2. Raise shoulders to ears\n3. Hold at top\n4. Lower with control",
             muscles: "Trapezius, Upper Back",
@@ -215,7 +215,7 @@ const exercises = {
         },
         {
             name: "Upright Row",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/3837780/pexels-photo-3837780.jpeg",
             video: "https://www.youtube.com/embed/amCU-ziHITM",
             instructions: "1. Hold barbell with narrow grip\n2. Pull bar to chin\n3. Keep elbows high\n4. Lower with control",
             muscles: "Deltoids, Trapezius, Biceps",
@@ -223,7 +223,7 @@ const exercises = {
         },
         {
             name: "Reverse Flyes",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/3837781/pexels-photo-3837781.jpeg",
             video: "https://www.youtube.com/embed/eaTpDgG2Lug",
             instructions: "1. Bend at hips with dumbbells\n2. Raise arms to sides\n3. Squeeze shoulder blades\n4. Lower with control",
             muscles: "Rear Deltoids, Trapezius, Rhomboids",
@@ -233,16 +233,23 @@ const exercises = {
     arms: {
         biceps: [
             {
-                name: "Dumbbell Curl",
-                image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+                name: "Bicep Curls",
+                image: "https://images.pexels.com/photos/4162485/pexels-photo-4162485.jpeg",
                 video: "https://www.youtube.com/embed/ykJmrZ5v0Oo",
-                instructions: "1. Hold dumbbells at sides\n2. Curl weights to shoulders\n3. Lower with control\n4. Keep elbows stationary",
-                muscles: "Biceps Brachii, Brachialis",
-                calories: 5
+                instructions: [
+                    "Stand with feet shoulder-width apart",
+                    "Hold dumbbells at your sides, palms facing forward",
+                    "Keep your upper arms stationary",
+                    "Curl the weights up towards your shoulders",
+                    "Slowly lower the weights back down",
+                    "Maintain control throughout the movement"
+                ],
+                muscles: ["Biceps Brachii", "Brachialis"],
+                calories: 3.5
             },
             {
                 name: "Barbell Curl",
-                image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+                image: "https://images.pexels.com/photos/2261482/pexels-photo-2261482.jpeg",
                 video: "https://www.youtube.com/embed/kwG2ipFRgfo",
                 instructions: "1. Hold barbell with underhand grip\n2. Curl bar to shoulders\n3. Lower with control\n4. Keep elbows close to body",
                 muscles: "Biceps Brachii, Brachialis",
@@ -250,7 +257,7 @@ const exercises = {
             },
             {
                 name: "Seated Alternating Curl",
-                image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+                image: "https://images.pexels.com/photos/2261482/pexels-photo-2261482.jpeg",
                 video: "https://www.youtube.com/embed/soxrZlIl35U",
                 instructions: "1. Sit on bench with dumbbells\n2. Alternate curling each arm\n3. Keep back straight\n4. Control movement",
                 muscles: "Biceps Brachii, Brachialis",
@@ -258,7 +265,7 @@ const exercises = {
             },
             {
                 name: "Preacher Curl",
-                image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+                image: "https://images.pexels.com/photos/2261482/pexels-photo-2261482.jpeg",
                 video: "https://www.youtube.com/embed/fIWP-FRFNU0",
                 instructions: "1. Rest arms on preacher bench\n2. Curl weight up\n3. Lower with control\n4. Keep back straight",
                 muscles: "Biceps Brachii, Brachialis",
@@ -266,7 +273,7 @@ const exercises = {
             },
             {
                 name: "Close-grip Lat Pulldown for Biceps",
-                image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+                image: "https://images.pexels.com/photos/2261482/pexels-photo-2261482.jpeg",
                 video: "https://www.youtube.com/embed/CAZ7EGqv4Go",
                 instructions: "1. Use close grip attachment\n2. Pull bar to chest\n3. Focus on biceps\n4. Control return",
                 muscles: "Biceps Brachii, Brachialis",
@@ -276,31 +283,52 @@ const exercises = {
         triceps: [
             {
                 name: "Close-grip Bench Press",
-                image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
-                video: "https://www.youtube.com/embed/6Z15HBGQD3c",
-                instructions: "1. Lie on bench with close grip\n2. Lower bar to chest\n3. Press up until arms straight\n4. Keep elbows close",
-                muscles: "Triceps, Chest",
-                calories: 8
+                image: "https://images.pexels.com/photos/4162491/pexels-photo-4162491.jpeg",
+                video: "https://www.youtube.com/embed/4aVy4XW9nQ4",
+                instructions: [
+                    "Lie on bench with narrow grip on barbell",
+                    "Grip should be shoulder-width or slightly closer",
+                    "Lower bar to lower chest",
+                    "Keep elbows close to body throughout",
+                    "Press bar back up to starting position",
+                    "Maintain controlled movement"
+                ],
+                muscles: ["Triceps Brachii", "Pectoralis Major"],
+                calories: 4
             },
             {
-                name: "Triceps Pushdown",
-                image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+                name: "Tricep Pushdown",
+                image: "https://images.pexels.com/photos/4162472/pexels-photo-4162472.jpeg",
                 video: "https://www.youtube.com/embed/2-LAMcpzODU",
-                instructions: "1. Use rope or bar attachment\n2. Push down until arms straight\n3. Control return\n4. Keep elbows at sides",
-                muscles: "Triceps",
-                calories: 6
+                instructions: [
+                    "Stand facing a cable machine with high pulley",
+                    "Grab the rope or bar attachment",
+                    "Keep elbows close to your sides",
+                    "Push the weight down until arms are fully extended",
+                    "Slowly return to starting position",
+                    "Maintain control throughout"
+                ],
+                muscles: ["Triceps Brachii"],
+                calories: 3
             },
             {
                 name: "Skull Crushers",
-                image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+                image: "https://images.pexels.com/photos/4162490/pexels-photo-4162490.jpeg",
                 video: "https://www.youtube.com/embed/d_KZxkY_0cM",
-                instructions: "1. Lie on bench with barbell\n2. Lower bar to forehead\n3. Extend arms\n4. Keep elbows stationary",
-                muscles: "Triceps",
-                calories: 7
+                instructions: [
+                    "Lie on a bench with dumbbells or barbell",
+                    "Hold weights above chest with arms extended",
+                    "Lower weights toward your forehead",
+                    "Keep elbows pointing toward ceiling",
+                    "Extend arms back up to starting position",
+                    "Maintain controlled movement throughout"
+                ],
+                muscles: ["Triceps Brachii"],
+                calories: 3.5
             },
             {
                 name: "One-arm Dumbbell Overhead Extension",
-                image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+                image: "https://images.pexels.com/photos/2261482/pexels-photo-2261482.jpeg",
                 video: "https://www.youtube.com/embed/6Z15HBGQD3c",
                 instructions: "1. Hold dumbbell overhead\n2. Lower behind head\n3. Extend arm\n4. Keep elbow stationary",
                 muscles: "Triceps",
@@ -308,7 +336,7 @@ const exercises = {
             },
             {
                 name: "Dips",
-                image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+                image: "https://images.pexels.com/photos/2261482/pexels-photo-2261482.jpeg",
                 video: "https://www.youtube.com/embed/2z8JmcrW-As",
                 instructions: "1. Support body on parallel bars\n2. Lower body by bending elbows\n3. Push back up\n4. Keep elbows close",
                 muscles: "Triceps, Chest, Shoulders",
@@ -319,7 +347,7 @@ const exercises = {
     legs: [
         {
             name: "Squats",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/4162451/pexels-photo-4162451.jpeg",
             video: "https://www.youtube.com/embed/aclHkVaku9U",
             instructions: "1. Stand with feet shoulder-width\n2. Lower body by bending knees\n3. Keep chest up and back straight\n4. Push through heels to stand",
             muscles: "Quadriceps, Glutes, Hamstrings",
@@ -327,7 +355,7 @@ const exercises = {
         },
         {
             name: "Barbell Back Squat",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/3837783/pexels-photo-3837783.jpeg",
             video: "https://www.youtube.com/embed/SW_C1A-rejs",
             instructions: "1. Place bar on upper back\n2. Lower body until thighs parallel\n3. Keep chest up\n4. Push through heels",
             muscles: "Quadriceps, Glutes, Hamstrings",
@@ -335,7 +363,7 @@ const exercises = {
         },
         {
             name: "Dumbbell Squat",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/3837784/pexels-photo-3837784.jpeg",
             video: "https://www.youtube.com/embed/gsNoPYwWXeM",
             instructions: "1. Hold dumbbells at sides\n2. Lower body until thighs parallel\n3. Keep chest up\n4. Push through heels",
             muscles: "Quadriceps, Glutes, Hamstrings",
@@ -343,7 +371,7 @@ const exercises = {
         },
         {
             name: "Bulgarian Split Squat",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/3837785/pexels-photo-3837785.jpeg",
             video: "https://www.youtube.com/embed/2C-uNgKwPLE",
             instructions: "1. Place back foot on bench\n2. Lower body until front thigh parallel\n3. Keep chest up\n4. Push through front heel",
             muscles: "Quadriceps, Glutes, Hamstrings",
@@ -351,7 +379,7 @@ const exercises = {
         },
         {
             name: "Leg Press",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/3837786/pexels-photo-3837786.jpeg",
             video: "https://www.youtube.com/embed/IZxyjW7MPJQ",
             instructions: "1. Adjust seat position\n2. Place feet on platform\n3. Lower weight until knees at 90 degrees\n4. Push through heels",
             muscles: "Quadriceps, Glutes, Hamstrings",
@@ -359,7 +387,7 @@ const exercises = {
         },
         {
             name: "Lunges",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/4162452/pexels-photo-4162452.jpeg",
             video: "https://www.youtube.com/embed/QOVaHwm-Q6U",
             instructions: "1. Step forward with one leg\n2. Lower body until back knee nearly touches ground\n3. Push back to start\n4. Keep torso upright",
             muscles: "Quadriceps, Glutes, Hamstrings",
@@ -367,7 +395,7 @@ const exercises = {
         },
         {
             name: "Walking Lunges",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/3837788/pexels-photo-3837788.jpeg",
             video: "https://www.youtube.com/embed/L8fvypPrzzs",
             instructions: "1. Step forward into lunge\n2. Push through front heel\n3. Bring back leg forward\n4. Repeat with other leg",
             muscles: "Quadriceps, Glutes, Hamstrings",
@@ -375,7 +403,7 @@ const exercises = {
         },
         {
             name: "Leg Curl",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/3837789/pexels-photo-3837789.jpeg",
             video: "https://www.youtube.com/embed/1Tq3QdYUuHs",
             instructions: "1. Lie face down on machine\n2. Place ankles under pad\n3. Curl legs up\n4. Control return",
             muscles: "Hamstrings",
@@ -383,7 +411,7 @@ const exercises = {
         },
         {
             name: "Leg Extension",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/3837790/pexels-photo-3837790.jpeg",
             video: "https://www.youtube.com/embed/YyvSfVjQeL0",
             instructions: "1. Sit on machine\n2. Place ankles under pad\n3. Extend legs\n4. Control return",
             muscles: "Quadriceps",
@@ -391,7 +419,7 @@ const exercises = {
         },
         {
             name: "Romanian Deadlift",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/3837791/pexels-photo-3837791.jpeg",
             video: "https://www.youtube.com/embed/JCXUYuzwNrM",
             instructions: "1. Hold barbell with overhand grip\n2. Hinge at hips\n3. Lower bar along legs\n4. Return to start",
             muscles: "Hamstrings, Glutes, Lower Back",
@@ -399,7 +427,7 @@ const exercises = {
         },
         {
             name: "Standing Calf Raise",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/3837792/pexels-photo-3837792.jpeg",
             video: "https://www.youtube.com/embed/JByVl2QvwxM",
             instructions: "1. Stand on edge of platform\n2. Raise heels as high as possible\n3. Lower heels below platform\n4. Repeat",
             muscles: "Gastrocnemius, Soleus",
@@ -407,7 +435,7 @@ const exercises = {
         },
         {
             name: "Seated Calf Raise",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/3837793/pexels-photo-3837793.jpeg",
             video: "https://www.youtube.com/embed/JByVl2QvwxM",
             instructions: "1. Sit on machine\n2. Place balls of feet on platform\n3. Raise heels as high as possible\n4. Lower below platform",
             muscles: "Soleus",
@@ -417,7 +445,7 @@ const exercises = {
     core: [
         {
             name: "Sit-ups",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/4162453/pexels-photo-4162453.jpeg",
             video: "https://www.youtube.com/embed/1fbU_MkV7NE",
             instructions: "1. Lie on back with knees bent\n2. Place hands behind head\n3. Curl torso up\n4. Lower with control",
             muscles: "Rectus Abdominis, Hip Flexors",
@@ -425,7 +453,7 @@ const exercises = {
         },
         {
             name: "Crunches",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/3837795/pexels-photo-3837795.jpeg",
             video: "https://www.youtube.com/embed/Xyd_fa5zoEU",
             instructions: "1. Lie on back with knees bent\n2. Place hands behind head\n3. Lift shoulders off ground\n4. Lower with control",
             muscles: "Rectus Abdominis",
@@ -433,7 +461,7 @@ const exercises = {
         },
         {
             name: "Russian Twists",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/3837796/pexels-photo-3837796.jpeg",
             video: "https://www.youtube.com/embed/wkD8rjkodUI",
             instructions: "1. Sit with knees bent\n2. Lean back slightly\n3. Twist torso side to side\n4. Keep core engaged",
             muscles: "Obliques, Rectus Abdominis",
@@ -441,7 +469,7 @@ const exercises = {
         },
         {
             name: "Plank",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/4162454/pexels-photo-4162454.jpeg",
             video: "https://www.youtube.com/embed/pSHjTRCQxIw",
             instructions: "1. Start in push-up position\n2. Support body on forearms\n3. Keep body straight\n4. Hold position",
             muscles: "Rectus Abdominis, Transverse Abdominis, Obliques",
@@ -449,7 +477,7 @@ const exercises = {
         },
         {
             name: "Side Plank",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/3837798/pexels-photo-3837798.jpeg",
             video: "https://www.youtube.com/embed/K2VljzCC16g",
             instructions: "1. Lie on side\n2. Support body on forearm\n3. Lift hips off ground\n4. Hold position",
             muscles: "Obliques, Transverse Abdominis",
@@ -457,7 +485,7 @@ const exercises = {
         },
         {
             name: "Hanging Leg Raises",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/3837799/pexels-photo-3837799.jpeg",
             video: "https://www.youtube.com/embed/l4kQd9eWclE",
             instructions: "1. Hang from bar\n2. Raise legs to 90 degrees\n3. Lower with control\n4. Keep core engaged",
             muscles: "Lower Abs, Hip Flexors",
@@ -465,7 +493,7 @@ const exercises = {
         },
         {
             name: "Reverse Crunch",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/3837800/pexels-photo-3837800.jpeg",
             video: "https://www.youtube.com/embed/Xyd_fa5zoEU",
             instructions: "1. Lie on back with legs up\n2. Lift hips off ground\n3. Lower with control\n4. Keep core engaged",
             muscles: "Lower Abs, Hip Flexors",
@@ -473,7 +501,7 @@ const exercises = {
         },
         {
             name: "Mountain Climbers",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/4162455/pexels-photo-4162455.jpeg",
             video: "https://www.youtube.com/embed/cnyTQDSE884",
             instructions: "1. Start in push-up position\n2. Bring knee to chest\n3. Alternate legs\n4. Keep core tight",
             muscles: "Rectus Abdominis, Hip Flexors",
@@ -481,7 +509,7 @@ const exercises = {
         },
         {
             name: "Bicycle Crunches",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/3837802/pexels-photo-3837802.jpeg",
             video: "https://www.youtube.com/embed/9FGilxCbdz8",
             instructions: "1. Lie on back with hands behind head\n2. Bring opposite elbow to knee\n3. Alternate sides\n4. Keep core engaged",
             muscles: "Rectus Abdominis, Obliques",
@@ -489,11 +517,74 @@ const exercises = {
         },
         {
             name: "Leg Raises",
-            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+            image: "https://images.pexels.com/photos/3837803/pexels-photo-3837803.jpeg",
             video: "https://www.youtube.com/embed/l4kQd9eWclE",
             instructions: "1. Lie on back with legs straight\n2. Raise legs to 90 degrees\n3. Lower with control\n4. Keep lower back pressed to floor",
             muscles: "Lower Abs, Hip Flexors",
             calories: 6
+        }
+    ],
+    arms: [
+        {
+            name: "Hammer Curls",
+            image: "https://images.pexels.com/photos/4162451/pexels-photo-4162451.jpeg",
+            video: "https://www.youtube.com/embed/TwD-YGVP4Bk",
+            instructions: [
+                "Stand with feet shoulder-width apart",
+                "Hold dumbbells at your sides, palms facing each other",
+                "Keep your upper arms stationary",
+                "Curl the weights up towards your shoulders",
+                "Maintain neutral grip throughout",
+                "Lower weights back down with control"
+            ],
+            muscles: ["Biceps Brachii", "Brachialis", "Brachioradialis"],
+            calories: 3.5
+        },
+        {
+            name: "Preacher Curls",
+            image: "https://images.pexels.com/photos/6550852/pexels-photo-6550852.jpeg",
+            video: "https://www.youtube.com/embed/fIWP-FRFNU0",
+            instructions: "1. Sit at preacher bench\n2. Place arms on pad\n3. Curl weight up\n4. Lower with control",
+            muscles: "Biceps Brachii",
+            calories: 6
+        },
+        {
+            name: "Concentration Curls",
+            image: "https://images.pexels.com/photos/6550853/pexels-photo-6550853.jpeg",
+            video: "https://www.youtube.com/embed/Jvj2wV0vOYU",
+            instructions: "1. Sit with elbow on inner thigh\n2. Curl weight up\n3. Squeeze at top\n4. Lower with control",
+            muscles: "Biceps Brachii",
+            calories: 5
+        },
+        {
+            name: "Zottman Curls",
+            image: "https://images.pexels.com/photos/4162492/pexels-photo-4162492.jpeg",
+            video: "https://www.youtube.com/embed/ZrpRBgswtHs",
+            instructions: [
+                "Stand with dumbbells at your sides",
+                "Perform regular bicep curl",
+                "At the top, rotate wrists 180 degrees",
+                "Lower weights with reverse grip",
+                "Rotate back to starting position",
+                "Keep core engaged throughout"
+            ],
+            muscles: ["Biceps Brachii", "Brachialis", "Forearm Flexors"],
+            calories: 3.5
+        },
+        {
+            name: "Rope Tricep Extension",
+            image: "https://images.pexels.com/photos/4162493/pexels-photo-4162493.jpeg",
+            video: "https://www.youtube.com/embed/kiuVA0gs3EI",
+            instructions: [
+                "Face away from cable machine",
+                "Hold rope attachment overhead",
+                "Keep upper arms stationary",
+                "Extend forearms forward",
+                "Slowly return to starting position",
+                "Maintain tension throughout movement"
+            ],
+            muscles: ["Triceps Brachii"],
+            calories: 3
         }
     ]
 };
@@ -530,13 +621,27 @@ function loadExercises(category = 'all') {
 function createExerciseCard(exercise) {
     const card = document.createElement('div');
     card.className = 'exercise-card';
+
+    // Create the card content
     card.innerHTML = `
-        <img src="${exercise.image}" alt="${exercise.name}">
+        <div class="exercise-image-container">
+            <img src="${exercise.image}" alt="${exercise.name}" class="exercise-image">
+            <div class="exercise-overlay">
+                <button class="view-details-btn">View Details</button>
+            </div>
+        </div>
         <div class="exercise-card-content">
             <h3>${exercise.name}</h3>
-            <button class="view-details" data-exercise='${JSON.stringify(exercise)}'>View Details</button>
+            <p class="exercise-muscles">${Array.isArray(exercise.muscles) ? exercise.muscles.join(', ') : exercise.muscles}</p>
+            <p class="exercise-calories">${exercise.calories} calories/set</p>
         </div>
     `;
+
+    // Add click event to the entire card
+    card.addEventListener('click', function () {
+        showExerciseModal(exercise);
+    });
+
     return card;
 }
 
@@ -636,7 +741,7 @@ function setupEventListeners() {
 
     // Exercise details modal
     document.addEventListener('click', function (e) {
-        if (e.target.classList.contains('view-details')) {
+        if (e.target.classList.contains('view-details-btn')) {
             const exercise = JSON.parse(e.target.dataset.exercise);
             showExerciseModal(exercise);
         }
@@ -667,16 +772,51 @@ function setupEventListeners() {
 function showExerciseModal(exercise) {
     const modal = document.getElementById('exercise-modal');
     document.getElementById('modal-exercise-name').textContent = exercise.name;
-    document.getElementById('modal-exercise-instructions').textContent = exercise.instructions;
-    document.getElementById('modal-exercise-muscles').textContent = exercise.muscles;
+
+    // Format instructions properly
+    const instructions = Array.isArray(exercise.instructions)
+        ? exercise.instructions.join('\n')
+        : exercise.instructions;
+    document.getElementById('modal-exercise-instructions').textContent = instructions;
+
+    // Format muscles properly
+    const muscles = Array.isArray(exercise.muscles)
+        ? exercise.muscles.join(', ')
+        : exercise.muscles;
+    document.getElementById('modal-exercise-muscles').textContent = muscles;
+
     document.getElementById('modal-exercise-calories').textContent = `${exercise.calories} calories per set`;
 
     // Update video iframe
     const videoIframe = document.getElementById('exercise-video');
-    const videoId = exercise.video.split('/').pop();
-    videoIframe.src = `https://www.youtube.com/embed/${videoId}`;
+    if (exercise.video) {
+        // Extract video ID from URL if it's a full YouTube URL
+        let videoId = exercise.video;
+        if (exercise.video.includes('youtube.com')) {
+            const url = new URL(exercise.video);
+            videoId = url.searchParams.get('v') || url.pathname.split('/').pop();
+        }
+        videoIframe.src = `https://www.youtube.com/embed/${videoId}`;
+        videoIframe.style.display = 'block';
+    } else {
+        videoIframe.style.display = 'none';
+    }
 
+    // Update image
+    const modalImage = document.createElement('img');
+    modalImage.src = exercise.image;
+    modalImage.alt = exercise.name;
+    modalImage.className = 'modal-exercise-image';
+
+    const imageContainer = document.querySelector('.exercise-video');
+    imageContainer.innerHTML = '';
+    imageContainer.appendChild(modalImage);
+    imageContainer.appendChild(videoIframe);
+
+    // Store exercise data for the add button
     document.querySelector('.add-to-workout').dataset.exercise = JSON.stringify(exercise);
+
+    // Show modal
     modal.style.display = 'block';
 }
 

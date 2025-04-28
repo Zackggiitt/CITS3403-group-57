@@ -67,31 +67,91 @@
     gap: 20px;
 }
 
+/* Exercise Card Styles */
 .exercise-card {
-    background: var(--white);
+    background-color: var(--white);
     border-radius: 10px;
-    overflow: hidden;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
     transition: transform 0.3s;
+    cursor: pointer;
+    margin: 1rem;
+    width: 300px;
 }
 
 .exercise-card:hover {
     transform: translateY(-5px);
 }
 
-.exercise-card img {
+.exercise-image-container {
+    position: relative;
     width: 100%;
     height: 200px;
+    overflow: hidden;
+}
+
+.exercise-image {
+    width: 100%;
+    height: 100%;
     object-fit: cover;
+    transition: transform 0.3s;
+}
+
+.exercise-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.exercise-card:hover .exercise-overlay {
+    opacity: 1;
+}
+
+.exercise-card:hover .exercise-image {
+    transform: scale(1.1);
+}
+
+.view-details-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s;
+}
+
+.view-details-btn:hover {
+    background-color: #45a049;
 }
 
 .exercise-card-content {
-    padding: 20px;
+    padding: 1.5rem;
 }
 
-.exercise-card h3 {
-    margin-bottom: 10px;
+.exercise-card-content h3 {
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+}
+
+.exercise-muscles {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.exercise-calories {
     color: var(--primary-color);
+    font-weight: bold;
 }
 
 /* Workout Planner */
@@ -154,7 +214,7 @@
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Modal */
+/* Modal Styles */
 .modal {
     display: none;
     position: fixed;
@@ -162,54 +222,91 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.7);
     z-index: 1000;
+    overflow-y: auto;
 }
 
 .modal-content {
-    background: var(--white);
-    width: 80%;
-    max-width: 1000px;
-    margin: 50px auto;
-    padding: 30px;
+    background-color: var(--white);
+    margin: 2rem auto;
+    padding: 2rem;
     border-radius: 10px;
+    max-width: 800px;
     position: relative;
 }
 
 .close-modal {
     position: absolute;
-    top: 20px;
-    right: 20px;
-    font-size: 2rem;
+    top: 1rem;
+    right: 1rem;
+    font-size: 1.5rem;
     cursor: pointer;
+    color: #666;
+}
+
+.exercise-details {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.modal-exercise-image {
+    width: 100%;
+    max-height: 300px;
+    object-fit: cover;
+    border-radius: 5px;
+    margin-bottom: 1rem;
+}
+
+.exercise-video {
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%;
+    /* 16:9 Aspect Ratio */
+    margin-bottom: 1rem;
+}
+
+.exercise-video iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: 5px;
 }
 
 .exercise-info {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 30px;
-    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
 }
 
-.exercise-video video {
-    width: 100%;
-    border-radius: 5px;
+.exercise-info h3 {
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.exercise-info p {
+    color: var(--text-color);
+    line-height: 1.6;
 }
 
 .add-to-workout {
-    background: var(--primary-color);
-    color: var(--white);
+    background-color: var(--primary-color);
+    color: white;
     border: none;
-    padding: 15px 30px;
+    padding: 1rem 2rem;
     border-radius: 5px;
     cursor: pointer;
     font-size: 1.1rem;
-    margin-top: 20px;
+    margin-top: 1rem;
     transition: background-color 0.3s;
 }
 
 .add-to-workout:hover {
-    background: #45a049;
+    background-color: #45a049;
 }
 
 /* Responsive Design */
@@ -218,8 +315,18 @@
         grid-template-columns: 1fr;
     }
 
-    .exercise-info {
-        grid-template-columns: 1fr;
+    .exercise-card {
+        width: 100%;
+        margin: 1rem 0;
+    }
+
+    .modal-content {
+        margin: 1rem;
+        padding: 1rem;
+    }
+
+    .exercise-details {
+        gap: 1rem;
     }
 
     .week-days,
