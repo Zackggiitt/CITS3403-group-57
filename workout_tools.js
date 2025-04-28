@@ -503,6 +503,7 @@ document.addEventListener('DOMContentLoaded', function () {
     loadExercises();
     initializeCalorieChart();
     setupEventListeners();
+    initializeCalorieCalculator();
 });
 
 // Load exercises into the grid
@@ -566,6 +567,47 @@ function initializeCalorieChart() {
     window.calorieChart = chart;
 }
 
+// Calorie Calculator Functions
+function initializeCalorieCalculator() {
+    const calculatorForm = document.getElementById('calorie-calculator-form');
+    if (calculatorForm) {
+        calculatorForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            calculateCalories();
+        });
+    }
+}
+
+function calculateCalories() {
+    const weight = parseFloat(document.getElementById('weight').value);
+    const duration = parseFloat(document.getElementById('duration').value);
+    const intensity = document.getElementById('intensity').value;
+
+    if (isNaN(weight) || isNaN(duration)) {
+        showAlert('Please enter valid weight and duration');
+        return;
+    }
+
+    let caloriesPerMinute;
+    switch (intensity) {
+        case 'low':
+            caloriesPerMinute = 3.5;
+            break;
+        case 'moderate':
+            caloriesPerMinute = 7;
+            break;
+        case 'high':
+            caloriesPerMinute = 10;
+            break;
+        default:
+            caloriesPerMinute = 5;
+    }
+
+    const caloriesBurned = Math.round(caloriesPerMinute * duration * (weight / 70));
+    document.getElementById('calories-result').textContent = caloriesBurned;
+    document.getElementById('calories-result-container').style.display = 'block';
+}
+
 // Setup event listeners
 function setupEventListeners() {
     // Category filter
@@ -610,6 +652,15 @@ function setupEventListeners() {
         const exercise = JSON.parse(this.dataset.exercise);
         addToWorkout(exercise);
     });
+
+    // Calorie Calculator
+    const calculatorForm = document.getElementById('calorie-calculator-form');
+    if (calculatorForm) {
+        calculatorForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            calculateCalories();
+        });
+    }
 }
 
 // Show exercise modal
