@@ -171,9 +171,45 @@ body {
     margin-bottom: 0.5rem;
 }
 
+.login-form .input-container {
+    position: relative;
+    width: 100%;
+}
+
+.input-container .icon {
+    position: absolute;
+    top: 50%;
+    left: 10px;
+    transform: translateY(-50%);
+    color: #aaa;
+    font-size: 16px;
+}
+
+.input-container input {
+    width: 100%;
+    padding: 10px 35px 10px 35px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
 .login-form .form-group input:focus {
     border-color: var(--primary-color); 
     outline: none; 
+}
+.input-container .toggle-password {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #aaa;
+    font-size: 18px;
+}
+
+.input-container .toggle-password:hover {
+    color: #333;
 }
 
 .login-form .remember-me {
