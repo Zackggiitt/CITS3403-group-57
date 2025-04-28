@@ -136,6 +136,108 @@ body {
     transform: translateY(-2px);
 }
 
+/* Login Page */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: var(--light-gray);
+}
+
+.login-form {
+    background-color: var(--white);
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+}
+
+.login-form h2 {
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.login-form .form-group {
+    margin-bottom: 1.5rem;
+}
+
+.login-form .form-group label {
+    font-weight: bold;
+    display: block; 
+    margin-bottom: 0.5rem;
+}
+
+.login-form .form-group input:focus {
+    border-color: var(--primary-color); 
+    outline: none; 
+}
+
+.login-form .remember-me {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 1.5rem;
+}
+
+.login-form .remember-me input {
+    margin-right: 0.5rem;
+}
+
+.remember-me input[type="checkbox"] {
+    width: 15px;
+    height: 15px;
+    margin-top: -4px;
+}
+
+.login-form .submit-btn {
+    width: 100%;
+    padding: 1rem;
+    background-color: var(--primary-color); 
+    color: var(--white); 
+    border: none;
+    border-radius: 5px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s; 
+}
+
+.login-form .submit-btn:hover {
+    background-color: #45a049; 
+    transform: translateY(-2px); 
+}
+
+
+.login-form .link {
+    text-align: center;
+    margin-top: 1rem;
+}
+
+.login-form .link a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: bold;
+    transition: all 0.3s;
+}
+
+.login-form .link a:hover {
+    text-decoration: underline;
+}
+
+.login-form .forgot-password {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: bold;
+    transition: all 0.3s;
+}
+
+.login-form .forgot-password:hover {
+    text-decoration: underline;
+}
+
 /* Features Section */
 .features {
     padding: 5rem 5%;
