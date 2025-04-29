@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FitPal - Profile</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -15,14 +15,14 @@
     <nav class="navbar">
         <div class="logo">FitPal</div>
         <div class="nav-links">
-            <a href="index.html">Home</a>
-            <a href="index.html#features">Features</a>
-            <a href="workout_tools.html">Tools</a>
-            <a href="posts.html">Posts</a>
-            <a href="index.html#about">About</a>
-            <a href="index.html#contact">Contact</a>
-            <button class="login-btn">Login</button>
-            <button class="signup-btn">Sign Up</button>
+            <a href="{{ url_for('index') }}">Home</a>
+            <a href="{{ url_for('index') }}#features">Features</a>
+            <a href="{{ url_for('workout_tools') }}">Tools</a>
+            <a href="{{ url_for('posts') }}">Posts</a>
+            <a href="{{ url_for('index') }}#about">About</a>
+            <a href="{{ url_for('index') }}#contact">Contact</a>
+            <a href="{{ url_for('login') }}"><button class="login-btn">Login</button></a>
+            <a href="{{ url_for('signup') }}"><button class="signup-btn">Sign Up</button></a>
         </div>
     </nav>
 
@@ -90,10 +90,12 @@
             </div>
             <div class="footer-section">
                 <h3>Quick Links</h3>
-                <a href="index.html">Home</a>
-                <a href="index.html#features">Features</a>
-                <a href="index.html#about">About</a>
-                <a href="index.html#contact">Contact</a>
+                <a href="{{ url_for('index') }}">Home</a>
+                <a href="{{ url_for('index') }}#features">Features</a>
+                <a href="{{ url_for('workout_tools') }}">Tools</a>
+                <a href="{{ url_for('posts') }}">Posts</a>
+                <a href="{{ url_for('index') }}#about">About</a>
+                <a href="{{ url_for('index') }}#contact">Contact</a>
             </div>
             <div class="footer-section">
                 <h3>Connect With Us</h3>
@@ -109,7 +111,7 @@
         </div>
     </footer>
 
-    <script src="script.js"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
     <script>
         // Initialize the lift progress chart
         const liftCtx = document.getElementById('liftProgressChart').getContext('2d');
