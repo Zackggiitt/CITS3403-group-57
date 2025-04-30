@@ -4,22 +4,22 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Sign Up</title>
-        <link rel="stylesheet" href="styles.css">
+        <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
         
-        <script src="script.js" defer></script>
+        <script src="{{ url_for('static', filename='script.js') }}" defer></script>
     </head>
 
     <body>
         <nav class="navbar">
             <div class="logo">FitPal</div>
             <div class="nav-links">
-                <a href="index.html">Home</a>
-                <a href="index.html#features">Features</a>
-                <a href="workout_tools.html">Tools</a>
-                <a href="posts.html" class="active">Posts</a>
-                <a href="index.html#about">About</a>
-                <a href="index.html#contact">Contact</a>
+                <a href="{{ url_for('index') }}">Home</a>
+                <a href="{{ url_for('index') }}#features">Features</a>
+                <a href="{{ url_for('workout_tools') }}">Tools</a>
+                <a href="{{ url_for('posts') }}" class="active">Posts</a>
+                <a href="{{ url_for('index') }}#about">About</a>
+                <a href="{{ url_for('index') }}#contact">Contact</a>
             </div>
         </nav>
 
@@ -65,7 +65,7 @@
                 <button type="submit" class="submit-btn">Create Account</button>
     
                 <div class="link">
-                    <p>Already have an account?<a href="login.html"> Login</a></p>
+                    <p>Already have an account?<a href="{{ url_for('login') }}"> Login</a></p>
                 </div>
             </form>
         </div>
