@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <!-- Posts Header -->
+    <header class="posts-header">
+        <h1>Community Posts</h1>
+        <p>Coming Soon</p>
+    </header>
+
+    <!-- Posts Section -->
+    <section class="posts-container">
+        <!-- Post Actions: Button to trigger modal -->
+        <div class="posts-actions">
+            <button class="create-post-btn" id="createPostBtn"><i class="fas fa-plus"></i> Create New Post</button>
+            <!-- Filter might be added back later if needed -->
+        </div>
+
+        <!-- Post Placeholder -->
+        <div class="post-placeholder">
+            <p>This page is under development</p>
+            <!-- Icon can be added here if desired -->
+        </div>
+    </section>
+
+    <!-- Create Post Modal -->
+    <div id="createPostModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create New Post</h2>
+                <button class="close-btn" id="closeModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="createPostForm">
+                    <div class="form-group">
+                        <label for="postTitle">Title</label>
+                        <input type="text" id="postTitle" name="postTitle" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="postCategory">Category</label>
+                        <select id="postCategory" name="postCategory">
+                            <option value="workout">Workout Tips</option>
+                            <option value="nutrition">Nutrition</option>
+                            <option value="story">Success Stories</option>
+                            <option value="general">General Discussion</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="postContent">Content</label>
+                        <textarea id="postContent" name="postContent" rows="6" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" form="createPostForm" class="submit-btn">Post</button>
+                <button type="button" class="cancel-btn" id="cancelModalBtn">Cancel</button>
+            </div>
+        </div>
+    </div>
+    <!-- End Create Post Modal -->
+{% endblock %}

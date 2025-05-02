@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <h1>Track Your Fitness Journey</h1>
+            <p>Join FitPal to monitor your workouts, track progress, and share achievements with friends.</p>
+            <button class="cta-button">Get Started</button>
+        </div>
+        <div class="hero-image">
+            <img src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b" alt="Fitness Tracking">
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <h2>Key Features</h2>
+        <div class="feature-cards">
+            <div class="card">
+                <i class="fas fa-chart-line"></i>
+                <h3>Track Progress</h3>
+                <p>Monitor your fitness journey with detailed statistics and visualizations.</p>
+            </div>
+            <div class="card">
+                <i class="fas fa-users"></i>
+                <h3>Social Sharing</h3>
+                <p>Share your achievements and motivate your friends.</p>
+            </div>
+            <div class="card">
+                <i class="fas fa-dumbbell"></i>
+                <h3>Workout Plans</h3>
+                <p>Access personalized workout plans and track your exercises.</p>
+            </div>
+            <div class="card">
+                <i class="fas fa-comment-dots"></i>
+                <h3>Community Posts</h3>
+                <p>Connect with others in our fitness community and share your experiences.</p>
+                <a href="{{ url_for('posts') }}" class="tool-link">View Posts <i class="fas fa-arrow-right"></i></a>
+            </div>
+            <div class="card">
+                <i class="fas fa-toolbox"></i>
+                <h3>Fitness Tools</h3>
+                <p>Use our specialized fitness calculators and tools to optimize your workouts.</p>
+                <a href="{{ url_for('workout_tools') }}" class="tool-link">Explore Tools <i class="fas fa-arrow-right"></i></a>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about">
+        <h2>About FitPal</h2>
+        <p>FitPal is your personal fitness companion, helping you stay motivated and track your progress. Whether you're
+            a beginner or a fitness enthusiast, our platform provides the tools you need to achieve your goals.</p>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+        <h2>Contact Us</h2>
+        <form class="contact-form">
+            <input type="text" placeholder="Name" required>
+            <input type="email" placeholder="Email" required>
+            <textarea placeholder="Message" required></textarea>
+            <button type="submit">Send Message</button>
+        </form>
+    </section>
+{% endblock %}

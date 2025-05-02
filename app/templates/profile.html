@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <!-- Profile Section -->
+    <section class="profile-container">
+        <div class="profile-header">
+            <div class="profile-picture-container">
+                <img src="https://ui-avatars.com/api/?name=John+Doe&background=4CAF50&color=fff&size=150" alt="Profile Picture" class="profile-picture">
+            </div>
+            <h1 class="profile-name">John Doe</h1>
+            <p class="profile-bio">Fitness enthusiast | Marathon runner | Healthy living advocate</p>
+        </div>
+
+        <div class="stats-container">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <i class="fas fa-weight"></i>
+                    <h3>BMI</h3>
+                    <p class="stat-number">22.5</p>
+                    <p class="stat-category">Normal</p>
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-fire"></i>
+                    <h3>BMR</h3>
+                    <p class="stat-number">1,850</p>
+                    <p class="stat-category">kcal/day</p>
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-dumbbell"></i>
+                    <h3>Total Volume</h3>
+                    <p class="stat-number">10,000</p>
+                    <p class="stat-category">kg</p>
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-chart-line"></i>
+                    <h3>Workouts</h3>
+                    <p class="stat-number">156</p>
+                    <p class="stat-category">sessions</p>
+                </div>
+            </div>
+            <div class="stats-charts">
+                <div class="chart-container">
+                    <h3>Lift Progress</h3>
+                    <canvas id="liftProgressChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>Volume per Workout</h3>
+                    <canvas id="volumeProgressChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="profile-actions">
+            <button class="edit-profile-btn"><i class="fas fa-edit"></i> Edit Profile</button>
+            <button class="share-profile-btn"><i class="fas fa-share-alt"></i> Share Profile</button>
+        </div>
+    </section>
+{% endblock %}
+
+{% block scripts %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script>
+        // Initialize the lift progress chart
+        const liftCtx = document.getElementById('liftProgressChart').getContext('2d');
+        new Chart(liftCtx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Bench Press',
+                    data: [60, 65, 70, 75, 80, 85],
+                    borderColor: '#4CAF50',
+                    backgroundColor: '#4CAF50',
+                    tension: 0.1
+                }, {
+                    label: 'Squat',
+                    data: [100, 110, 120, 130, 140, 150],
+                    borderColor: '#2196F3',
+                    backgroundColor: '#2196F3',
+                    tension: 0.1
+                }, {
+                    label: 'Deadlift',
+                    data: [120, 130, 140, 150, 160, 170],
+                    borderColor: '#FF9800',
+                    backgroundColor: '#FF9800',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Lift Progress (kg)'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Weight (kg)'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Initialize the volume progress chart
+        const volumeCtx = document.getElementById('volumeProgressChart').getContext('2d');
+        new Chart(volumeCtx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Volume per Workout',
+                    data: [320, 300, 350, 360, 330, 370],
+                    borderColor: '#4CAF50',
+                    tension: 0.1,
+                    fill: false,
+                    backgroundColor: '#4CAF50'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Volume per Workout (kg)'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Volume (kg)'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+{% endblock %}
