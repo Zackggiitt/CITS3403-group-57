@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='workout_tools.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <!-- Add custom styles for tools page -->
     <style>
         .tools-container {
@@ -370,26 +370,60 @@
                 <h2>Weekly Workout Planner</h2>
                 <div class="planner-container">
                     <div class="calendar">
-                        <div class="week-days">
-                            <div class="day" data-day="monday">Monday</div>
-                            <div class="day" data-day="tuesday">Tuesday</div>
-                            <div class="day" data-day="wednesday">Wednesday</div>
-                            <div class="day" data-day="thursday">Thursday</div>
-                            <div class="day" data-day="friday">Friday</div>
-                            <div class="day" data-day="saturday">Saturday</div>
-                            <div class="day" data-day="sunday">Sunday</div>
-                        </div>
                         <div class="workout-slots" id="workout-slots">
-                            <!-- Workout slots will be dynamically loaded here -->
+                            <div class="day-column">
+                                Monday
+                                <div class="workout-slot" data-day="monday">
+                                    <!-- Exercises for Monday will be added here by JS -->
+                                </div>
+                            </div>
+                            <div class="day-column">
+                                Tuesday
+                                <div class="workout-slot" data-day="tuesday">
+                                    <!-- Exercises for Tuesday will be added here by JS -->
+                                </div>
+                            </div>
+                            <div class="day-column">
+                                Wednesday
+                                <div class="workout-slot" data-day="wednesday">
+                                    <!-- Exercises for Wednesday will be added here by JS -->
+                                </div>
+                            </div>
+                            <div class="day-column">
+                                Thursday
+                                <div class="workout-slot" data-day="thursday">
+                                    <!-- Exercises for Thursday will be added here by JS -->
+                                </div>
+                            </div>
+                            <div class="day-column">
+                                Friday
+                                <div class="workout-slot" data-day="friday">
+                                    <!-- Exercises for Friday will be added here by JS -->
+                                </div>
+                            </div>
+                            <div class="day-column">
+                                Saturday
+                                <div class="workout-slot" data-day="saturday">
+                                    <!-- Exercises for Saturday will be added here by JS -->
+                                </div>
+                            </div>
+                            <div class="day-column">
+                                Sunday
+                                <div class="workout-slot" data-day="sunday">
+                                    <!-- Exercises for Sunday will be added here by JS -->
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="calorie-tracker">
-                        <h3>Weekly Calorie Burn</h3>
+                </div>
+                <!-- Moved calorie-tracker outside planner-container -->
+                <div class="calorie-tracker">
+                    <h3>Weekly Calorie Burn</h3>
+                    <div class="chart-container">
                         <canvas id="calorieChart"></canvas>
                     </div>
                 </div>
             </section>
-        </section>
 
         <!-- BMI Calculator Section -->
         <section id="bmi-calculator" class="tool-section">
@@ -557,7 +591,12 @@
                         <p id="modal-exercise-calories"></p>
                     </div>
                 </div>
-                <button class="add-to-workout">Add to Workout</button>
+                <!-- Area for day selection buttons -->
+                <div class="day-selection-prompt">Select day to add:</div>
+                <!-- Removed Sets/Reps input fields -->
+                <div class="day-selection-container">
+                    <!-- Day buttons will be generated by JS here -->
+                </div>
             </div>
         </div>
     </div>
@@ -566,6 +605,48 @@
 {% block scripts %}
     <script src="{{ url_for('static', filename='workout_tools.js') }}"></script>
     <script>
+        // Add debug marker for chart initialization
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                // Check if chart is initialized
+                if (window.calorieChart) {
+                    console.log('Page loaded, chart initialized');
+                    // Add a marker element indicating chart is loaded
+                    const debugMark = document.createElement('div');
+                    debugMark.style.display = 'none';
+                    debugMark.id = 'chart-loaded-marker';
+                    debugMark.setAttribute('data-status', 'loaded');
+                    document.body.appendChild(debugMark);
+                } else {
+                    console.error('Page loaded, but chart not initialized');
+                    // Show debug controls if chart failed to initialize
+                    const debugControls = document.getElementById('chart-debug-controls');
+                    if (debugControls) {
+                        debugControls.style.display = 'block';
+                    }
+                }
+                
+                // Double-check chart canvas and container
+                const chartCanvas = document.getElementById('calorieChart');
+                const chartContainer = document.querySelector('.chart-container');
+                
+                console.log('Chart Canvas:', chartCanvas);
+                console.log('Chart Container:', chartContainer);
+                
+                if (chartCanvas) {
+                    console.log('Canvas dimensions:', 
+                      'Width = ' + chartCanvas.clientWidth, 
+                      'Height = ' + chartCanvas.clientHeight);
+                }
+                
+                // Attempt to reinitialize chart if needed and not already done
+                if (!window.calorieChart && typeof initializeCalorieChart === 'function') {
+                    console.log('Attempting to reinitialize chart automatically');
+                    setTimeout(initializeCalorieChart, 200);
+                }
+            }, 500);
+        });
+        
         // Function to show workout tools
         function showWorkoutTools() {
             document.getElementById('tools-overview').style.display = 'none';

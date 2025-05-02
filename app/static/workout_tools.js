@@ -1,4 +1,6 @@
 // Exercise Data
+const WORKOUT_PLAN_API_URL = '/api/workout_plan';
+
 const exercises = {
     chest: [
         {
@@ -591,10 +593,18 @@ const exercises = {
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', function () {
-    loadExercises();
+    // loadExercises();
     initializeCalorieChart();
     setupEventListeners();
     initializeCalorieCalculator();
+    
+    // Load real workout plan data
+    loadWorkoutPlan().catch(error => {
+        console.error("Error loading workout plan:", error);
+    });
+    
+    // Add listener to handle remove buttons
+    document.addEventListener('click', handleRemoveExercise);
 });
 
 // Load exercises into the grid
@@ -647,29 +657,144 @@ function createExerciseCard(exercise) {
 
 // Initialize calorie chart
 function initializeCalorieChart() {
-    const ctx = document.getElementById('calorieChart').getContext('2d');
-    const chart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-            datasets: [{
-                label: 'Calories Burned',
-                data: [0, 0, 0, 0, 0, 0, 0],
-                backgroundColor: 'rgba(76, 175, 80, 0.6)',
-                borderColor: 'rgba(76, 175, 80, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true
+    const ctx = document.getElementById('calorieChart');
+    if (!ctx) {
+        console.error('Chart canvas element not found');
+        return;
+    }
+    
+    // Ensure Chart.js library is loaded
+    if (typeof Chart === 'undefined') {
+        console.error('Chart.js library is not loaded, chart cannot be initialized');
+        return;
+    }
+    
+    // If a chart instance already exists, destroy it first
+    if (window.calorieChart instanceof Chart) {
+        window.calorieChart.destroy();
+        console.log('Destroyed existing chart instance');
+    }
+    
+    // Initialize empty data
+    const initialData = [0, 0, 0, 0, 0, 0, 0];
+    
+    try {
+        const chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+                datasets: [{
+                    label: 'Calories Burned',
+                    data: initialData,
+                    backgroundColor: 'rgba(76, 175, 80, 0.8)',
+                    borderColor: 'rgba(76, 175, 80, 1)',
+                    borderWidth: 2,
+                    borderRadius: 8,
+                    barThickness: 70,
+                    maxBarThickness: 90
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                layout: {
+                    padding: {
+                        top: 30,
+                        right: 40,
+                        bottom: 30, 
+                        left: 30
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        suggestedMax: 300,
+                        grid: {
+                            color: 'rgba(200, 200, 200, 0.2)'
+                        },
+                        ticks: {
+                            stepSize: 50,
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            },
+                            padding: 15,
+                            callback: function(value) {
+                                return value + ' cal';
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Calories',
+                            font: {
+                                size: 20,
+                                weight: 'bold'
+                            },
+                            padding: {
+                                top: 15,
+                                bottom: 15
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            },
+                            color: '#333',
+                            padding: 20
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            font: {
+                                size: 18,
+                                weight: 'bold'
+                            },
+                            padding: 25,
+                            color: '#333'
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleFont: {
+                            size: 18,
+                            weight: 'bold'
+                        },
+                        bodyFont: {
+                            size: 16
+                        },
+                        padding: 18,
+                        callbacks: {
+                            label: function(context) {
+                                return context.formattedValue + ' calories';
+                            }
+                        }
+                    }
+                },
+                animation: {
+                    duration: 1000,
+                    easing: 'easeOutQuart'
                 }
             }
-        }
-    });
-    window.calorieChart = chart;
+        });
+        
+        // Save chart instance to global variable
+        window.calorieChart = chart;
+        
+        console.log('Chart initialized successfully', chart);
+        return chart;
+    } catch (error) {
+        console.error('Error initializing chart:', error);
+        return null;
+    }
 }
 
 // Calorie Calculator Functions
@@ -730,35 +855,20 @@ function setupEventListeners() {
         });
     });
 
-    // Category cards
-    document.querySelectorAll('.category-card').forEach(card => {
-        card.addEventListener('click', function () {
-            const category = this.dataset.category;
-            document.getElementById('category-filter').value = category;
-            loadExercises(category);
+    // Improved document click listener to handle exercise details and add-to-workout
+    document.removeEventListener('click', handleDocumentClick); // Remove old listener if exists
+    document.addEventListener('click', handleDocumentClick); // Add the new handler function
+
+    // Close modal listener remains the same
+    const closeModalButton = document.querySelector('.close-modal');
+    if(closeModalButton) {
+        closeModalButton.addEventListener('click', function () {
+            const modal = document.getElementById('exercise-modal');
+            if(modal) modal.style.display = 'none';
         });
-    });
+    }
 
-    // Exercise details modal
-    document.addEventListener('click', function (e) {
-        if (e.target.classList.contains('view-details-btn')) {
-            const exercise = JSON.parse(e.target.dataset.exercise);
-            showExerciseModal(exercise);
-        }
-    });
-
-    // Close modal
-    document.querySelector('.close-modal').addEventListener('click', function () {
-        document.getElementById('exercise-modal').style.display = 'none';
-    });
-
-    // Add to workout
-    document.querySelector('.add-to-workout').addEventListener('click', function () {
-        const exercise = JSON.parse(this.dataset.exercise);
-        addToWorkout(exercise);
-    });
-
-    // Calorie Calculator
+    // Calorie Calculator listener remains the same
     const calculatorForm = document.getElementById('calorie-calculator-form');
     if (calculatorForm) {
         calculatorForm.addEventListener('submit', function (e) {
@@ -768,82 +878,338 @@ function setupEventListeners() {
     }
 }
 
+// Define the handler function separately for clarity
+function handleDocumentClick(e) {
+    const target = e.target;
+
+    // Handle clicks on category cards
+    const categoryCard = target.closest('.category-card');
+    if (categoryCard) {
+        const category = categoryCard.dataset.category;
+        const categoryFilter = document.getElementById('category-filter');
+        if(categoryFilter) categoryFilter.value = category;
+        loadExercises(category);
+        return; // Handled category click
+    }
+
+    // Handle clicks related to exercise details modal
+    const viewDetailsButton = target.closest('.view-details-btn');
+
+    if (viewDetailsButton) {
+        const exerciseDataString = viewDetailsButton.dataset.exercise;
+        if (exerciseDataString) {
+            try {
+                const exercise = JSON.parse(exerciseDataString);
+                showExerciseModal(exercise);
+            } catch (parseError) {
+                console.error("Error parsing exercise data for view details:", parseError, exerciseDataString);
+            }
+        } else {
+            console.warn("View details button clicked, but no data-exercise attribute found.");
+        }
+    }
+    // If the click was not on any handled element, the function simply exits
+}
+
 // Show exercise modal
 function showExerciseModal(exercise) {
     const modal = document.getElementById('exercise-modal');
+    if (!modal) {
+        console.error("Critical Error: Cannot find modal element #exercise-modal");
+        return;
+    }
+    modal.dataset.exerciseData = JSON.stringify(exercise);
+
+    // --- Populate Modal Content ---
     document.getElementById('modal-exercise-name').textContent = exercise.name;
-
-    // Format instructions properly
-    const instructions = Array.isArray(exercise.instructions)
-        ? exercise.instructions.join('\n')
-        : exercise.instructions;
+    const instructions = Array.isArray(exercise.instructions) ? exercise.instructions.join('\n') : exercise.instructions;
     document.getElementById('modal-exercise-instructions').textContent = instructions;
-
-    // Format muscles properly
-    const muscles = Array.isArray(exercise.muscles)
-        ? exercise.muscles.join(', ')
-        : exercise.muscles;
+    const muscles = Array.isArray(exercise.muscles) ? exercise.muscles.join(', ') : exercise.muscles;
     document.getElementById('modal-exercise-muscles').textContent = muscles;
-
     document.getElementById('modal-exercise-calories').textContent = `${exercise.calories} calories per set`;
 
-    // Update video iframe
     const videoIframe = document.getElementById('exercise-video');
-    if (exercise.video) {
-        // Extract video ID from URL if it's a full YouTube URL
-        let videoId = exercise.video;
-        if (exercise.video.includes('youtube.com')) {
-            const url = new URL(exercise.video);
-            videoId = url.searchParams.get('v') || url.pathname.split('/').pop();
+    const imageContainer = modal.querySelector('.exercise-video');
+    if (imageContainer) {
+        imageContainer.innerHTML = '';
+        if (exercise.video) {
+            let videoId = exercise.video;
+            if (exercise.video.includes('youtube.com')) {
+                const url = new URL(exercise.video);
+                videoId = url.searchParams.get('v') || url.pathname.split('/').pop();
+            }
+            videoIframe.src = `https://www.youtube.com/embed/${videoId}`;
+            videoIframe.style.display = 'block';
+            imageContainer.appendChild(videoIframe);
+        } else {
+            videoIframe.style.display = 'none';
+            if (exercise.image) {
+                 const modalImage = document.createElement('img');
+                 modalImage.src = exercise.image;
+                 modalImage.alt = exercise.name;
+                 modalImage.className = 'modal-exercise-image';
+                 imageContainer.appendChild(modalImage);
+            }
         }
-        videoIframe.src = `https://www.youtube.com/embed/${videoId}`;
-        videoIframe.style.display = 'block';
     } else {
-        videoIframe.style.display = 'none';
+        console.error("Cannot find .exercise-video container in modal");
     }
 
-    // Update image
-    const modalImage = document.createElement('img');
-    modalImage.src = exercise.image;
-    modalImage.alt = exercise.name;
-    modalImage.className = 'modal-exercise-image';
-
-    const imageContainer = document.querySelector('.exercise-video');
-    imageContainer.innerHTML = '';
-    imageContainer.appendChild(modalImage);
-    imageContainer.appendChild(videoIframe);
-
-    // Store exercise data for the add button
-    document.querySelector('.add-to-workout').dataset.exercise = JSON.stringify(exercise);
+    // --- Generate Day Selection Buttons --- 
+    const dayContainer = modal.querySelector('.day-selection-container');
+    if(dayContainer) {
+        generateButtons(dayContainer); // Call original generateButtons
+    } else {
+        console.error("[showExerciseModal] Could not find .day-selection-container immediately.");
+    }
 
     // Show modal
     modal.style.display = 'block';
 }
 
-// Add exercise to workout
-function addToWorkout(exercise) {
-    const day = prompt('Which day would you like to add this exercise to? (Monday-Sunday)');
-    if (day) {
-        const dayIndex = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].indexOf(day.toLowerCase());
-        if (dayIndex !== -1) {
-            const slot = document.querySelector(`.workout-slot[data-day="${day.toLowerCase()}"]`);
-            if (slot) {
-                const exerciseElement = document.createElement('div');
-                exerciseElement.className = 'workout-exercise';
-                exerciseElement.innerHTML = `
-                    <h4>${exercise.name}</h4>
-                    <p>${exercise.calories} calories/set</p>
-                `;
-                slot.appendChild(exerciseElement);
-                updateCalorieChart(dayIndex, exercise.calories);
+// Original generateButtons function
+function generateButtons(container) { 
+    container.innerHTML = ''; 
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    const modalElement = container.closest('#exercise-modal');
+    if (!modalElement) {
+        console.error("Could not find parent modal for day container");
+        return;
+    }
+    const storedExerciseData = modalElement.dataset.exerciseData; 
+
+    if (!storedExerciseData) {
+        console.error("Could not find stored exercise data on modal when generating buttons.");
+        return; 
+    }
+
+    days.forEach(dayName => {
+        const button = document.createElement('button');
+        button.textContent = dayName;
+        button.className = 'day-select-btn';
+        const dayValue = dayName.toLowerCase();
+        button.dataset.day = dayValue;
+
+        button.addEventListener('click', () => {
+            try {
+                const exerciseToAdd = JSON.parse(storedExerciseData);
+                // No sets/reps handling here anymore
+                addExerciseToDay(exerciseToAdd, dayValue);
+                modalElement.style.display = 'none';
+            } catch (e) {
+                console.error("Error parsing stored exercise data on day button click:", e);
+            }
+        });
+        container.appendChild(button);
+    });
+}
+
+// Reverted addExerciseToDay
+function addExerciseToDay(exercise, day) {
+    const lowerCaseDay = day.toLowerCase(); 
+    const slot = document.querySelector(`.workout-slot[data-day="${lowerCaseDay}"]`);
+    
+    if (slot) {
+        console.log(`[addExerciseToDay] Adding exercise to slot for ${lowerCaseDay}:`, exercise); 
+        const exerciseElement = document.createElement('div');
+        exerciseElement.className = 'workout-exercise'; 
+        
+        exerciseElement.innerHTML = `
+            <h4 class="exercise-name">${exercise.name}</h4>
+            <p class="exercise-calories-info">${exercise.calories} calories</p>
+            <button class="remove-exercise-btn">&times;</button> 
+        `;
+        // Append element first
+        slot.appendChild(exerciseElement); 
+
+        // --- Real-time Chart Update --- 
+        if (window.calorieChart) {
+            const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+            const dayIndex = days.indexOf(lowerCaseDay);
+            if (dayIndex !== -1) {
+                const currentCalories = window.calorieChart.data.datasets[0].data[dayIndex] || 0;
+                const addedCalories = Number(exercise.calories) || 0;
+                window.calorieChart.data.datasets[0].data[dayIndex] = currentCalories + addedCalories;
+                window.calorieChart.update(); // Update chart immediately
+                console.log(`[addExerciseToDay] Chart updated for day ${dayIndex}. New total: ${currentCalories + addedCalories}`);
             }
         }
+        // --- End Real-time Chart Update --- 
+
+        // Save after updating chart and adding to DOM
+        saveWorkoutPlan(); 
+
+    } else {
+        console.error(`[addExerciseToDay] Could not find slot for day: ${lowerCaseDay}`);
+        alert(`Error: Could not find the planner slot for ${day}.`);
     }
 }
 
-// Update calorie chart
-function updateCalorieChart(dayIndex, calories) {
-    const chart = window.calorieChart;
-    chart.data.datasets[0].data[dayIndex] += calories;
-    chart.update();
-} 
+// Reverted loadWorkoutPlan
+async function loadWorkoutPlan() {
+    try {
+        const response = await fetch(WORKOUT_PLAN_API_URL);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const planData = await response.json();
+
+        const slotsContainer = document.getElementById('workout-slots');
+        slotsContainer.querySelectorAll('.workout-slot .workout-exercise').forEach(el => el.remove());
+        
+        initializeCalorieChart();
+
+        const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        
+        console.log("[loadWorkoutPlan] Fetched plan data:", planData);
+
+        for (const day in planData) {
+            const dayIndex = days.indexOf(day.toLowerCase());
+            if (dayIndex !== -1) {
+                const slot = slotsContainer.querySelector(`.workout-slot[data-day="${day.toLowerCase()}"]`);
+                if (slot) {
+                    let dayTotalCalories = 0;
+                    planData[day].forEach(exercise => {
+                        const exerciseElement = document.createElement('div');
+                        exerciseElement.className = 'workout-exercise';
+
+                        exerciseElement.innerHTML = `
+                            <h4 class="exercise-name">${exercise.name}</h4>
+                            <p class="exercise-calories-info">${exercise.calories} calories</p>
+                            <button class="remove-exercise-btn">&times;</button>
+                        `;
+                        slot.appendChild(exerciseElement);
+                        // Ensure calories are treated as numbers
+                        dayTotalCalories += Number(exercise.calories) || 0; 
+                    });
+                    
+                    // Update chart data for the corresponding day
+                    if (window.calorieChart) {
+                        window.calorieChart.data.datasets[0].data[dayIndex] = dayTotalCalories;
+                        // Log data assignment
+                        console.log(`[loadWorkoutPlan] Setting chart data for day ${dayIndex} (${day}) to: ${dayTotalCalories}`);
+                        console.log(`[loadWorkoutPlan] Chart data array is now:`, JSON.stringify(window.calorieChart.data.datasets[0].data));
+                    }
+                }
+            }
+        }
+
+        // Ensure chart exists and update display
+        if (window.calorieChart) {
+            // Log final data before update
+            console.log(`[loadWorkoutPlan] Final chart data before update:`, JSON.stringify(window.calorieChart.data.datasets[0].data));
+            window.calorieChart.update();
+            console.log("[loadWorkoutPlan] Chart updated successfully after loading plan");
+        } else {
+            console.error("[loadWorkoutPlan] Chart instance does not exist after data population");
+        }
+
+    } catch (error) {
+        console.error("Error loading workout plan:", error);
+        throw error; 
+    }
+}
+
+// Reverted saveWorkoutPlan
+async function saveWorkoutPlan() {
+    const planData = {};
+    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    const slotsContainer = document.getElementById('workout-slots');
+
+    console.log("[saveWorkoutPlan] Starting to collect plan data from DOM...");
+
+    days.forEach(day => {
+        const slot = slotsContainer.querySelector(`.workout-slot[data-day="${day}"]`);
+        if (slot) {
+            const exercises = [];
+            slot.querySelectorAll('.workout-exercise').forEach(exerciseElement => {
+                const nameElement = exerciseElement.querySelector('.exercise-name');
+                const name = nameElement?.textContent;
+
+                const caloriesElement = exerciseElement.querySelector('.exercise-calories-info');
+                const caloriesText = caloriesElement?.textContent;
+                const caloriesMatch = caloriesText?.match(/(\d+)/);
+                const calories = caloriesMatch ? parseInt(caloriesMatch[1], 10) : 0;
+
+                // Removed sets/reps extraction
+
+                if (name) {
+                    exercises.push({ name, calories }); // Only save name and calories
+                } else {
+                    console.warn(`[saveWorkoutPlan] Skipping exercise, name not found:`, exerciseElement);
+                }
+            });
+            console.log(`[saveWorkoutPlan] Collected exercises for day '${day}':`, exercises);
+            if (exercises.length > 0) {
+                 planData[day] = exercises;
+            }
+        } else {
+            console.warn(`[saveWorkoutPlan] Slot not found for day: ${day}`);
+        }
+    });
+
+    console.log("[saveWorkoutPlan] Final planData collected:", planData);
+
+    try {
+        const response = await fetch(WORKOUT_PLAN_API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(planData), 
+        });
+
+        if (!response.ok) {
+             let errorBody = await response.text();
+             console.error("[saveWorkoutPlan] Server responded with error:", response.status, errorBody);
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log("Workout plan saved successfully:", result.message);
+        
+        // Reverted the logic for reloading
+        // await loadWorkoutPlan(); // Re-enable simple reload if needed, but removed for now to match pre-sets/reps state
+
+    } catch (error) {
+        console.error("Error saving workout plan:", error);
+    }
+}
+
+// Handle exercise removal function
+function handleRemoveExercise(event) {
+    if (event.target.classList.contains('remove-exercise-btn')) {
+        console.log('[handleRemoveExercise] Remove button clicked');
+        const button = event.target;
+        const exerciseElement = button.closest('.workout-exercise');
+        const slotElement = button.closest('.workout-slot');
+
+        if (exerciseElement && slotElement) {
+            // Get data *before* removing
+            const day = slotElement.dataset.day;
+            const caloriesElement = exerciseElement.querySelector('.exercise-calories-info');
+            const caloriesMatch = caloriesElement?.textContent?.match(/(\d+)/);
+            const removedCalories = caloriesMatch ? parseInt(caloriesMatch[1], 10) : 0;
+            const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+            const dayIndex = days.indexOf(day);
+
+            // Remove from DOM
+            exerciseElement.remove(); 
+
+            // --- Real-time Chart Update --- 
+            if (window.calorieChart && dayIndex !== -1) {
+                const currentCalories = window.calorieChart.data.datasets[0].data[dayIndex] || 0;
+                window.calorieChart.data.datasets[0].data[dayIndex] = Math.max(0, currentCalories - removedCalories); // Ensure not negative
+                window.calorieChart.update(); // Update chart immediately
+                console.log(`[handleRemoveExercise] Chart updated for day ${dayIndex}. New total: ${Math.max(0, currentCalories - removedCalories)}`);
+            }
+            // --- End Real-time Chart Update --- 
+
+            // Save updated plan immediately
+            saveWorkoutPlan();
+            console.log('[handleRemoveExercise] Exercise removed and plan saved');
+        } else {
+            console.error('[handleRemoveExercise] Could not find exercise or slot element.');
+        }
+    }
+}
