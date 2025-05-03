@@ -7,11 +7,21 @@ class WorkoutPlan(db.Model):
     exercise_name = db.Column(db.String(100), nullable=False)
     calories = db.Column(db.Integer, nullable=False)
     # New fields, allow null values
-    sets = db.Column(db.Integer, nullable=True)
-    reps = db.Column(db.Integer, nullable=True)
+    sets = db.Column(db.Integer, nullable=False, default=3)
+    reps = db.Column(db.Integer, nullable=False, default=10)
     # Future fields could be added here
     # user_id = db.Column(db.Integer, db.ForeignKey('user.id')) # Example for user association
 
     def __repr__(self):
         # String representation for debugging
-        return f'<WorkoutPlan {self.day_of_week}: {self.exercise_name}>'
+        return f'<WorkoutPlan {self.day_of_week}: {self.exercise_name} {self.sets}x{self.reps}>'
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'day': self.day_of_week,
+            'name': self.exercise_name,
+            'calories': self.calories,
+            'sets': self.sets,
+            'reps': self.reps
+        }

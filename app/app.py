@@ -1,7 +1,12 @@
-from flask import Flask, render_template, url_for, redirect, request, jsonify # Import request and jsonify
+from flask import Flask, render_template, url_for, redirect, request, jsonify, current_app # Import request and jsonify
 from config import Config # Import configuration
 from flask_sqlalchemy import SQLAlchemy # Import SQLAlchemy
 from flask_migrate import Migrate # Import Migrate
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Initialize Flask application with custom template and static folder paths
 app = Flask(__name__, 
@@ -11,7 +16,9 @@ app = Flask(__name__,
             instance_path=Config.INSTANCE_FOLDER_PATH)
 
 # Load configuration from Config object
-app.config.from_object(Config)
+# Use environment variable or default to 'config.Config'
+app.config.from_object(os.environ.get('APP_SETTINGS', 'config.Config'))
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize database and migration tool
 db = SQLAlchemy(app)
@@ -52,71 +59,100 @@ def workout_tools():
 
 @app.route("/api/workout_plan", methods=['GET'])
 def get_workout_plan():
-    """Fetches the current workout plan"""
+    """Fetches the entire workout plan from the database."""
     try:
         # Query all workout plan entries
         plan_entries = models.WorkoutPlan.query.all()
-        # Group entries by day of the week
-        plan_by_day = {}
+        
+        # Organize data by day
+        plan_data = {}
         for entry in plan_entries:
-            day = entry.day_of_week
-            if day not in plan_by_day:
-                plan_by_day[day] = []
-            plan_by_day[day].append({
-                "name": entry.exercise_name,
-                "calories": entry.calories,
-                "sets": entry.sets, # Include sets
-                "reps": entry.reps  # Include reps
-                # Add other fields like sets/reps here if added later
-            })
-        return jsonify(plan_by_day), 200
-    except Exception as e:
-        # Add proper logging here
-        print(f"Error getting workout plan: {e}")
-        return jsonify({"error": "Could not retrieve workout plan"}), 500
+            day = entry.day_of_week # Use the correct attribute name
+            if day not in plan_data:
+                plan_data[day] = []
+            # Use the to_dict method which now includes sets and reps
+            plan_data[day].append(entry.to_dict())
 
+        # Return the organized data
+        # Check if plan_data is empty and return appropriate response
+        if not plan_data:
+             # Return an empty object or a 404 Not Found status
+             # Returning empty object is often preferred for GET requests expecting a collection
+             return jsonify({}), 200 # Or return jsonify({"message": "No workout plan found"}), 404
+        
+        return jsonify(plan_data), 200
+    except Exception as e:
+        current_app.logger.error(f"Error fetching workout plan: {e}")
+        return jsonify({"error": "Failed to retrieve workout plan"}), 500
 
 @app.route("/api/workout_plan", methods=['POST'])
 def save_workout_plan():
-    """Saves or updates the workout plan"""
+    """Saves the workout plan received from the frontend."""
     try:
-        # Get JSON data sent from the frontend
-        new_plan_data = request.get_json()
-        if not new_plan_data:
-            return jsonify({"error": "No data provided"}), 400
+        plan_data = request.get_json()
+        if not plan_data:
+            return jsonify({"error": "No data received"}), 400
 
-        # For simplicity, delete all old entries first
-        # Warning: Without user authentication, this deletes everyone's plan!
+        # Clear existing plan entries (assuming a single plan for now)
+        # In a multi-user scenario, you would filter by user_id
         models.WorkoutPlan.query.delete()
+        
+        new_entries = []
+        for day, exercises in plan_data.items():
+            if isinstance(exercises, list):
+                for exercise in exercises:
+                    # Ensure required fields are present and extract them
+                    name = exercise.get('name')
+                    # Frontend sends 'calories' which is calories_per_set
+                    calories_per_set = exercise.get('calories') 
+                    sets = exercise.get('sets')
+                    reps = exercise.get('reps')
 
-        # Create new plan entries based on the received data
-        for day, exercises in new_plan_data.items():
-            for exercise in exercises:
-                # Ensure necessary data is provided
-                if 'name' in exercise and 'calories' in exercise:
-                    plan_entry = models.WorkoutPlan(
-                        day_of_week=day,
-                        exercise_name=exercise['name'],
-                        calories=exercise['calories'],
-                        # Get sets and reps, default to None if not provided
-                        sets=exercise.get('sets'),
-                        reps=exercise.get('reps')
+                    # Basic validation
+                    if not all([name, calories_per_set is not None, sets is not None, reps is not None]):
+                         current_app.logger.warning(f"Skipping invalid exercise data for day {day}: {exercise}")
+                         continue # Skip this exercise if data is missing
+                    
+                    try:
+                        # Ensure numeric types
+                        calories_per_set = int(calories_per_set)
+                        sets = int(sets)
+                        reps = int(reps)
+                    except (ValueError, TypeError) as ve:
+                         current_app.logger.warning(f"Skipping exercise due to invalid numeric value for day {day}: {exercise} - Error: {ve}")
+                         continue # Skip if conversion fails
+
+                    # Create new entry using correct model field names
+                    new_entry = models.WorkoutPlan(
+                        day_of_week=day.lower(),
+                        exercise_name=name,
+                        calories=calories_per_set, # Map to the 'calories' field in model
+                        sets=sets,
+                        reps=reps
                     )
-                    db.session.add(plan_entry)
-                else:
-                    # Optionally skip invalid entries or return an error
-                    print(f"Skipping invalid exercise entry: {exercise}")
+                    new_entries.append(new_entry)
+            else:
+                current_app.logger.warning(f"Invalid data format for day {day}: Expected a list, got {type(exercises)}")
 
 
-        # Commit changes to the database
+        if not new_entries:
+             current_app.logger.info("No valid exercises found in the submitted plan data.")
+             # Commit the delete if no new entries are added
+             db.session.commit()
+             return jsonify({"message": "Workout plan cleared or no valid exercises submitted."}), 200
+
+
+        # Add all new entries to the session and commit
+        db.session.add_all(new_entries)
         db.session.commit()
-        return jsonify({"message": "Workout plan saved successfully"}), 201 # 201 Created or 200 OK
-
+        
+        return jsonify({"message": "Workout plan saved successfully"}), 201 # 201 Created
     except Exception as e:
-        db.session.rollback() # Rollback transaction on error
-        # Add proper logging here
-        print(f"Error saving workout plan: {e}")
-        return jsonify({"error": "Could not save workout plan"}), 500
+        db.session.rollback() # Rollback in case of error
+        current_app.logger.error(f"Error saving workout plan: {e}")
+        import traceback
+        traceback.print_exc() # Print detailed traceback to server logs
+        return jsonify({"error": "Failed to save workout plan", "details": str(e)}), 500
 
 # Run the application in debug mode if this file is executed directly
 if __name__ == "__main__":

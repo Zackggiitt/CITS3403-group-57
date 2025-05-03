@@ -679,23 +679,23 @@ function initializeCalorieChart() {
     const initialData = [0, 0, 0, 0, 0, 0, 0];
     
     try {
-        const chart = new Chart(ctx, {
-            type: 'bar',
-            data: {
+    const chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
                 labels: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
-                datasets: [{
-                    label: 'Calories Burned',
+            datasets: [{
+                label: 'Calories Burned',
                     data: initialData,
                     backgroundColor: 'rgba(76, 175, 80, 0.8)',
-                    borderColor: 'rgba(76, 175, 80, 1)',
+                borderColor: 'rgba(76, 175, 80, 1)',
                     borderWidth: 2,
                     borderRadius: 8,
                     barThickness: 70,
                     maxBarThickness: 90
-                }]
-            },
-            options: {
-                responsive: true,
+            }]
+        },
+        options: {
+            responsive: true,
                 maintainAspectRatio: false,
                 layout: {
                     padding: {
@@ -705,8 +705,8 @@ function initializeCalorieChart() {
                         left: 30
                     }
                 },
-                scales: {
-                    y: {
+            scales: {
+                y: {
                         beginAtZero: true,
                         suggestedMax: 300,
                         grid: {
@@ -782,12 +782,12 @@ function initializeCalorieChart() {
                 animation: {
                     duration: 1000,
                     easing: 'easeOutQuart'
-                }
             }
-        });
+        }
+    });
         
         // Save chart instance to global variable
-        window.calorieChart = chart;
+    window.calorieChart = chart;
         
         console.log('Chart initialized successfully', chart);
         return chart;
@@ -938,9 +938,9 @@ function showExerciseModal(exercise) {
                  if (exercise.video.includes('youtube.com/embed/')) {
                      videoId = exercise.video.split('/').pop().split('?')[0]; // Extract from embed URL
                  } else if (exercise.video.includes('youtube.com/watch?v=')) {
-                     const url = new URL(exercise.video);
+            const url = new URL(exercise.video);
                      videoId = url.searchParams.get('v'); // Extract from watch URL
-                 } else {
+    } else {
                      // Assume it's just the ID if not a standard YouTube URL
                      videoId = exercise.video;
                  }
@@ -962,11 +962,11 @@ function showExerciseModal(exercise) {
                  console.error("Error processing video URL, falling back to image:", e);
                  // Fallback to image if URL parsing fails
                  if (exercise.image) {
-                     const modalImage = document.createElement('img');
-                     modalImage.src = exercise.image;
-                     modalImage.alt = exercise.name;
-                     modalImage.className = 'modal-exercise-image';
-                     imageContainer.appendChild(modalImage);
+    const modalImage = document.createElement('img');
+    modalImage.src = exercise.image;
+    modalImage.alt = exercise.name;
+    modalImage.className = 'modal-exercise-image';
+    imageContainer.appendChild(modalImage);
                  }
              }
         } else if (exercise.image) { // If no video provided, use image
@@ -1094,7 +1094,7 @@ function showSetsRepsPrompt(exercise, day) {
     promptModal.style.display = 'block';
 }
 
-// Modified addExerciseToDay to include sets and reps (no change in signature needed now)
+// Modified addExerciseToDay to include sets and reps
 function addExerciseToDay(exercise, day, sets, reps) {
     const lowerCaseDay = day.toLowerCase();
     const slot = document.querySelector(`.workout-slot[data-day="${lowerCaseDay}"]`);
@@ -1103,31 +1103,33 @@ function addExerciseToDay(exercise, day, sets, reps) {
         console.log(`[addExerciseToDay] Adding exercise to slot for ${lowerCaseDay}:`, exercise, `Sets: ${sets}, Reps: ${reps}`);
         const exerciseElement = document.createElement('div');
         exerciseElement.className = 'workout-exercise';
-        // Store sets and reps as data attributes
+        const caloriesPerSet = Number(exercise.calories) || 0;
+        const totalCalories = caloriesPerSet * sets;
+
+        // Store sets, reps and BASE calories per set as data attributes
         exerciseElement.dataset.sets = sets;
         exerciseElement.dataset.reps = reps;
-        exerciseElement.dataset.caloriesPerSet = exercise.calories; // Store base calories per set
+        exerciseElement.dataset.caloriesPerSet = caloriesPerSet;
 
         exerciseElement.innerHTML = `
             <h4 class="exercise-name">${exercise.name}</h4>
             <p class="exercise-sets-reps">${sets} sets x ${reps} reps</p>
-            <p class="exercise-calories-info">${exercise.calories} calories / set</p>
+            <p class="exercise-calories-info">${totalCalories} calories (${caloriesPerSet}/set)</p> <!-- Display total and per set -->
             <button class="remove-exercise-btn">&times;</button>
         `;
         // Append element first
         slot.appendChild(exerciseElement);
 
-        // --- Real-time Chart Update (Still based on calories per set) ---
+        // --- Real-time Chart Update (Now using total calories) ---
         if (window.calorieChart) {
             const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
             const dayIndex = days.indexOf(lowerCaseDay);
             if (dayIndex !== -1) {
-                // Note: We still add the base 'calories per set' to the chart, NOT calories * sets.
+                // Add the TOTAL calories for this exercise (sets * caloriesPerSet)
                 const currentCalories = window.calorieChart.data.datasets[0].data[dayIndex] || 0;
-                const addedCalories = Number(exercise.calories) || 0;
-                window.calorieChart.data.datasets[0].data[dayIndex] = currentCalories + addedCalories;
+                window.calorieChart.data.datasets[0].data[dayIndex] = currentCalories + totalCalories;
                 window.calorieChart.update(); // Update chart immediately
-                console.log(`[addExerciseToDay] Chart updated for day ${dayIndex}. Added ${addedCalories} (base per set). New total: ${currentCalories + addedCalories}`);
+                console.log(`[addExerciseToDay] Chart updated for day ${dayIndex}. Added ${totalCalories} calories. New total: ${currentCalories + totalCalories}`);
             }
         }
         // --- End Real-time Chart Update ---
@@ -1146,69 +1148,66 @@ async function loadWorkoutPlan() {
     try {
         const response = await fetch(WORKOUT_PLAN_API_URL);
         if (!response.ok) {
-            // Handle cases where the plan might not exist (e.g., 404 on first load)
-             if (response.status === 404) {
-                 console.log("[loadWorkoutPlan] No existing plan found on server (404). Initializing empty chart.");
-                 initializeCalorieChart(); // Initialize empty chart
-                 // Clear any potential leftover exercises in the DOM slots
-                 const slotsContainer = document.getElementById('workout-slots');
-                 if (slotsContainer) {
-                     slotsContainer.querySelectorAll('.workout-slot .workout-exercise').forEach(el => el.remove());
-                 }
-                 return; // Exit function, nothing to load
-             }
+            if (response.status === 404) {
+                console.log("[loadWorkoutPlan] No existing plan found on server (404). Initializing empty chart.");
+                initializeCalorieChart();
+                const slotsContainer = document.getElementById('workout-slots');
+                if (slotsContainer) {
+                    slotsContainer.querySelectorAll('.workout-slot .workout-exercise').forEach(el => el.remove());
+                }
+                return;
+            }
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const planData = await response.json();
 
         const slotsContainer = document.getElementById('workout-slots');
-        // Clear existing exercises before loading new ones
         slotsContainer.querySelectorAll('.workout-slot .workout-exercise').forEach(el => el.remove());
 
-        initializeCalorieChart(); // Re-initialize or clear the chart
+        initializeCalorieChart(); // Re-initialize or clear the chart data
 
         const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        let chartData = Array(7).fill(0); // Initialize chart data array
 
         console.log("[loadWorkoutPlan] Fetched plan data:", planData);
 
         for (const day in planData) {
-             // Ensure day exists in our expected days array
             const lowerCaseDay = day.toLowerCase();
             if (!days.includes(lowerCaseDay)) continue;
 
             const dayIndex = days.indexOf(lowerCaseDay);
             const slot = slotsContainer.querySelector(`.workout-slot[data-day="${lowerCaseDay}"]`);
 
-            if (slot && Array.isArray(planData[day])) { // Check if data for the day is an array
+            if (slot && Array.isArray(planData[day])) {
                 let dayTotalCalories = 0;
                 planData[day].forEach(exercise => {
-                    // Backend currently doesn't return sets/reps, so we use defaults/placeholders
-                    const sets = exercise.sets || '-'; // Placeholder if not provided
-                    const reps = exercise.reps || '-'; // Placeholder if not provided
+                    // Backend now returns sets/reps reliably
+                    const sets = parseInt(exercise.sets, 10) || 1; // Default to 1 set if parsing fails
+                    const reps = parseInt(exercise.reps, 10) || 1; // Default to 1 rep
                     const caloriesPerSet = Number(exercise.calories) || 0;
+                    const totalCalories = caloriesPerSet * sets;
 
                     const exerciseElement = document.createElement('div');
                     exerciseElement.className = 'workout-exercise';
-                    // Store data attributes, even if defaults/placeholders
                     exerciseElement.dataset.sets = sets;
                     exerciseElement.dataset.reps = reps;
                     exerciseElement.dataset.caloriesPerSet = caloriesPerSet;
 
                     exerciseElement.innerHTML = `
                         <h4 class="exercise-name">${exercise.name}</h4>
-                         <p class="exercise-sets-reps">${sets === '-' ? '(Sets/Reps not saved)' : `${sets} sets x ${reps} reps`}</p>
-                        <p class="exercise-calories-info">${caloriesPerSet} calories / set</p>
+                         <p class="exercise-sets-reps">${sets} sets x ${reps} reps</p>
+                        <p class="exercise-calories-info">${totalCalories} calories (${caloriesPerSet}/set)</p>
                         <button class="remove-exercise-btn">&times;</button>
                     `;
                     slot.appendChild(exerciseElement);
-                    // Ensure calories are treated as numbers for the chart
-                    dayTotalCalories += caloriesPerSet; // Add base calories per set to chart total
+                    // Add TOTAL calories for this exercise to the day's total for the chart
+                    dayTotalCalories += totalCalories;
                 });
 
-                // Update chart data for the corresponding day
-                if (window.calorieChart && dayIndex !== -1) {
-                    window.calorieChart.data.datasets[0].data[dayIndex] = dayTotalCalories;
-                    console.log(`[loadWorkoutPlan] Setting chart data for day ${dayIndex} (${day}) to: ${dayTotalCalories}`);
+                // Update chart data array for the corresponding day
+                if (dayIndex !== -1) {
+                    chartData[dayIndex] = dayTotalCalories;
+                    console.log(`[loadWorkoutPlan] Calculated total calories for day ${dayIndex} (${day}): ${dayTotalCalories}`);
                 }
             } else if (!Array.isArray(planData[day])) {
                 console.warn(`[loadWorkoutPlan] Data for day '${day}' is not an array:`, planData[day]);
@@ -1217,9 +1216,10 @@ async function loadWorkoutPlan() {
             }
         }
 
-        // Ensure chart exists and update display
+        // Update chart with the accumulated data
         if (window.calorieChart) {
-            console.log(`[loadWorkoutPlan] Final chart data before update:`, JSON.stringify(window.calorieChart.data.datasets[0].data));
+             window.calorieChart.data.datasets[0].data = chartData;
+            console.log(`[loadWorkoutPlan] Final chart data before update:`, JSON.stringify(chartData));
             window.calorieChart.update();
             console.log("[loadWorkoutPlan] Chart updated successfully after loading plan");
         } else {
@@ -1228,16 +1228,13 @@ async function loadWorkoutPlan() {
 
     } catch (error) {
         console.error("Error loading workout plan:", error);
-        // Don't re-throw, allow the page to load partially
-        // Initialize chart even on error to prevent subsequent errors
         if (!window.calorieChart) {
              initializeCalorieChart();
         }
     }
 }
 
-
-// Modified saveWorkoutPlan
+// Modified saveWorkoutPlan to ensure correct data is sent
 async function saveWorkoutPlan() {
     const planData = {};
     const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
@@ -1256,37 +1253,29 @@ async function saveWorkoutPlan() {
                 // Retrieve data from data attributes
                 const sets = exerciseElement.dataset.sets;
                 const reps = exerciseElement.dataset.reps;
-                const caloriesPerSet = exerciseElement.dataset.caloriesPerSet; // Get base calories
+                const caloriesPerSet = exerciseElement.dataset.caloriesPerSet; // Get base calories per set
 
                 if (name && sets && reps && caloriesPerSet) {
                     exercises.push({
                         name: name,
                         sets: parseInt(sets, 10), // Send as number
                         reps: parseInt(reps, 10), // Send as number
-                        calories: parseInt(caloriesPerSet, 10) // Send base calories per set
+                        calories: parseInt(caloriesPerSet, 10) // Send BASE calories per set (matching backend expectation)
                     });
                 } else {
-                    console.warn(`[saveWorkoutPlan] Skipping exercise, missing data (name, sets, reps, or caloriesPerSet):`, {
-                         name: name,
-                         sets: sets,
-                         reps: reps,
-                         caloriesPerSet: caloriesPerSet,
-                         element: exerciseElement
+                    console.warn(`[saveWorkoutPlan] Skipping exercise, missing data:`, {
+                         name, sets, reps, caloriesPerSet, element: exerciseElement
                     });
                 }
             });
-            console.log(`[saveWorkoutPlan] Collected exercises for day '${day}':`, exercises);
-            // Always include the day key, even if empty, to potentially clear it on the backend if needed in the future.
             planData[day] = exercises;
-
         } else {
             console.warn(`[saveWorkoutPlan] Slot not found for day: ${day}`);
         }
     });
 
     console.log("[saveWorkoutPlan] Final planData collected:", planData);
-    console.log("[saveWorkoutPlan] Sending data to backend (backend will ignore sets/reps for now):", JSON.stringify(planData));
-
+    console.log("[saveWorkoutPlan] Sending data to backend:", JSON.stringify(planData));
 
     try {
         const response = await fetch(WORKOUT_PLAN_API_URL, {
@@ -1304,19 +1293,14 @@ async function saveWorkoutPlan() {
         }
 
         const result = await response.json();
-        console.log("Workout plan save request sent successfully (sets/reps ignored by backend):", result.message);
-
-        // No reload needed here as the DOM already reflects the latest state.
-        // Reloading via loadWorkoutPlan() would lose the sets/reps shown in the DOM.
+        console.log("Workout plan save request sent successfully:", result.message);
 
     } catch (error) {
         console.error("Error saving workout plan:", error);
-        // Optionally show an error message to the user
-        // alert(`Error saving workout plan: ${error.message}`);
     }
 }
 
-// Handle exercise removal function (no change needed for sets/reps logic currently)
+// Modified handleRemoveExercise to calculate total calories removed
 function handleRemoveExercise(event) {
     if (event.target.classList.contains('remove-exercise-btn')) {
         console.log('[handleRemoveExercise] Remove button clicked');
@@ -1327,23 +1311,25 @@ function handleRemoveExercise(event) {
         if (exerciseElement && slotElement) {
             // Get data *before* removing
             const day = slotElement.dataset.day;
-            const caloriesElement = exerciseElement.querySelector('.exercise-calories-info');
-            const caloriesMatch = caloriesElement?.textContent?.match(/(\d+)/);
-            const removedCalories = caloriesMatch ? parseInt(caloriesMatch[1], 10) : 0;
+            // Get sets and calories per set from data attributes
+            const sets = parseInt(exerciseElement.dataset.sets, 10) || 0;
+            const caloriesPerSet = parseInt(exerciseElement.dataset.caloriesPerSet, 10) || 0;
+            const removedTotalCalories = sets * caloriesPerSet;
+
             const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
             const dayIndex = days.indexOf(day);
 
             // Remove from DOM
-            exerciseElement.remove(); 
+            exerciseElement.remove();
 
-            // --- Real-time Chart Update --- 
+            // --- Real-time Chart Update (Subtract total calories) ---
             if (window.calorieChart && dayIndex !== -1) {
                 const currentCalories = window.calorieChart.data.datasets[0].data[dayIndex] || 0;
-                window.calorieChart.data.datasets[0].data[dayIndex] = Math.max(0, currentCalories - removedCalories); // Ensure not negative
+                window.calorieChart.data.datasets[0].data[dayIndex] = Math.max(0, currentCalories - removedTotalCalories); // Ensure not negative
                 window.calorieChart.update(); // Update chart immediately
-                console.log(`[handleRemoveExercise] Chart updated for day ${dayIndex}. New total: ${Math.max(0, currentCalories - removedCalories)}`);
+                console.log(`[handleRemoveExercise] Chart updated for day ${dayIndex}. Removed ${removedTotalCalories} calories. New total: ${Math.max(0, currentCalories - removedTotalCalories)}`);
             }
-            // --- End Real-time Chart Update --- 
+            // --- End Real-time Chart Update ---
 
             // Save updated plan immediately
             saveWorkoutPlan();
@@ -1352,4 +1338,4 @@ function handleRemoveExercise(event) {
             console.error('[handleRemoveExercise] Could not find exercise or slot element.');
         }
     }
-}
+} 
