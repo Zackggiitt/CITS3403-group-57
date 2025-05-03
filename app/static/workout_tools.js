@@ -922,7 +922,7 @@ function showExerciseModal(exercise) {
 
     // --- Populate Modal Content ---
     document.getElementById('modal-exercise-name').textContent = exercise.name;
-    const instructions = Array.isArray(exercise.instructions) ? exercise.instructions.join('\n') : exercise.instructions;
+    const instructions = Array.isArray(exercise.instructions) ? exercise.instructions.join('\\n') : exercise.instructions;
     document.getElementById('modal-exercise-instructions').textContent = instructions;
     const muscles = Array.isArray(exercise.muscles) ? exercise.muscles.join(', ') : exercise.muscles;
     document.getElementById('modal-exercise-muscles').textContent = muscles;
@@ -931,56 +931,81 @@ function showExerciseModal(exercise) {
     const videoIframe = document.getElementById('exercise-video');
     const imageContainer = modal.querySelector('.exercise-video');
     if (imageContainer) {
-        imageContainer.innerHTML = '';
-        if (exercise.video) {
-            let videoId = exercise.video;
-            if (exercise.video.includes('youtube.com')) {
-                const url = new URL(exercise.video);
-                videoId = url.searchParams.get('v') || url.pathname.split('/').pop();
-            }
-            videoIframe.src = `https://www.youtube.com/embed/${videoId}`;
-            videoIframe.style.display = 'block';
-            imageContainer.appendChild(videoIframe);
-        } else {
-            videoIframe.style.display = 'none';
-            if (exercise.image) {
-                 const modalImage = document.createElement('img');
-                 modalImage.src = exercise.image;
-                 modalImage.alt = exercise.name;
-                 modalImage.className = 'modal-exercise-image';
-                 imageContainer.appendChild(modalImage);
-            }
+        imageContainer.innerHTML = ''; // Clear previous content
+        if (exercise.video && exercise.video.trim() !== '') {
+             let videoId;
+             try {
+                 if (exercise.video.includes('youtube.com/embed/')) {
+                     videoId = exercise.video.split('/').pop().split('?')[0]; // Extract from embed URL
+                 } else if (exercise.video.includes('youtube.com/watch?v=')) {
+                     const url = new URL(exercise.video);
+                     videoId = url.searchParams.get('v'); // Extract from watch URL
+                 } else {
+                     // Assume it's just the ID if not a standard YouTube URL
+                     videoId = exercise.video;
+                 }
+                 if (videoId) {
+                     const iframe = document.createElement('iframe');
+                     iframe.src = `https://www.youtube.com/embed/${videoId}`;
+                     iframe.className = 'modal-exercise-video'; // Reuse class for consistency
+                     iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
+                     iframe.allowFullscreen = true;
+                     imageContainer.appendChild(iframe);
+                 } else if (exercise.image) { // Fallback to image if video processing fails or no ID found
+                     const modalImage = document.createElement('img');
+                     modalImage.src = exercise.image;
+                     modalImage.alt = exercise.name;
+                     modalImage.className = 'modal-exercise-image'; // Use a different class if needed for styling
+                     imageContainer.appendChild(modalImage);
+                 }
+            } catch (e) {
+                 console.error("Error processing video URL, falling back to image:", e);
+                 // Fallback to image if URL parsing fails
+                 if (exercise.image) {
+                     const modalImage = document.createElement('img');
+                     modalImage.src = exercise.image;
+                     modalImage.alt = exercise.name;
+                     modalImage.className = 'modal-exercise-image';
+                     imageContainer.appendChild(modalImage);
+                 }
+             }
+        } else if (exercise.image) { // If no video provided, use image
+            const modalImage = document.createElement('img');
+            modalImage.src = exercise.image;
+            modalImage.alt = exercise.name;
+            modalImage.className = 'modal-exercise-image';
+            imageContainer.appendChild(modalImage);
         }
     } else {
         console.error("Cannot find .exercise-video container in modal");
     }
 
-    // --- Generate Day Selection Buttons --- 
+    // --- Generate Day Selection Buttons ---
     const dayContainer = modal.querySelector('.day-selection-container');
     if(dayContainer) {
-        generateButtons(dayContainer); // Call original generateButtons
+        generateButtons(dayContainer); // Call function to generate day buttons
     } else {
-        console.error("[showExerciseModal] Could not find .day-selection-container immediately.");
+        console.error("[showExerciseModal] Could not find .day-selection-container.");
     }
 
     // Show modal
     modal.style.display = 'block';
 }
 
-// Original generateButtons function
-function generateButtons(container) { 
-    container.innerHTML = ''; 
+// Function to generate day selection buttons inside the main modal
+function generateButtons(container) {
+    container.innerHTML = '';
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     const modalElement = container.closest('#exercise-modal');
     if (!modalElement) {
-        console.error("Could not find parent modal for day container");
+        console.error("Could not find parent modal (#exercise-modal) for day container");
         return;
     }
-    const storedExerciseData = modalElement.dataset.exerciseData; 
+    const storedExerciseData = modalElement.dataset.exerciseData;
 
     if (!storedExerciseData) {
         console.error("Could not find stored exercise data on modal when generating buttons.");
-        return; 
+        return;
     }
 
     days.forEach(dayName => {
@@ -993,9 +1018,10 @@ function generateButtons(container) {
         button.addEventListener('click', () => {
             try {
                 const exerciseToAdd = JSON.parse(storedExerciseData);
-                // No sets/reps handling here anymore
-                addExerciseToDay(exerciseToAdd, dayValue);
+                // Close the main modal
                 modalElement.style.display = 'none';
+                // Show the prompt modal instead of directly adding
+                showSetsRepsPrompt(exerciseToAdd, dayValue);
             } catch (e) {
                 console.error("Error parsing stored exercise data on day button click:", e);
             }
@@ -1004,40 +1030,110 @@ function generateButtons(container) {
     });
 }
 
-// Reverted addExerciseToDay
-function addExerciseToDay(exercise, day) {
-    const lowerCaseDay = day.toLowerCase(); 
+// New function to show the sets/reps prompt modal
+let currentPromptHandler = null; // To store the event handler
+
+function showSetsRepsPrompt(exercise, day) {
+    const promptModal = document.getElementById('sets-reps-prompt');
+    const exerciseNameEl = document.getElementById('prompt-exercise-name');
+    const setsInput = document.getElementById('prompt-sets');
+    const repsInput = document.getElementById('prompt-reps');
+    const confirmBtn = document.getElementById('confirm-add-exercise-btn');
+    const closeBtn = promptModal.querySelector('.close-prompt-btn');
+
+    if (!promptModal || !exerciseNameEl || !setsInput || !repsInput || !confirmBtn || !closeBtn) {
+        console.error("Could not find all required elements for the sets/reps prompt.");
+        return;
+    }
+
+    // Set exercise name in the prompt title
+    exerciseNameEl.textContent = `Enter Sets and Reps for ${exercise.name}`; 
+    // Reset to default values
+    setsInput.value = 3;
+    repsInput.value = 10;
+
+    // Remove previous listener if exists to prevent duplicates
+    if (currentPromptHandler) {
+        confirmBtn.removeEventListener('click', currentPromptHandler);
+    }
+
+    // Define the new handler for this specific exercise and day
+    currentPromptHandler = () => {
+        const sets = parseInt(setsInput.value, 10);
+        const reps = parseInt(repsInput.value, 10);
+
+        if (isNaN(sets) || sets <= 0) {
+            alert("Please enter a valid number for sets.");
+            return;
+        }
+        if (isNaN(reps) || reps <= 0) {
+            alert("Please enter a valid number for reps.");
+            return;
+        }
+
+        addExerciseToDay(exercise, day, sets, reps); // Add with entered sets/reps
+        promptModal.style.display = 'none'; // Hide prompt after adding
+    };
+
+    // Add the new event listener to the confirm button
+    confirmBtn.addEventListener('click', currentPromptHandler);
+
+    // Add listener for the close button (simple hide)
+     const closeHandler = () => {
+        promptModal.style.display = 'none';
+        closeBtn.removeEventListener('click', closeHandler); // Clean up listener
+        // Also remove the confirm button listener if the prompt is closed without confirming
+        if (currentPromptHandler) {
+             confirmBtn.removeEventListener('click', currentPromptHandler);
+             currentPromptHandler = null;
+        }
+    };
+    closeBtn.addEventListener('click', closeHandler);
+
+    // Show the prompt modal
+    promptModal.style.display = 'block';
+}
+
+// Modified addExerciseToDay to include sets and reps (no change in signature needed now)
+function addExerciseToDay(exercise, day, sets, reps) {
+    const lowerCaseDay = day.toLowerCase();
     const slot = document.querySelector(`.workout-slot[data-day="${lowerCaseDay}"]`);
-    
+
     if (slot) {
-        console.log(`[addExerciseToDay] Adding exercise to slot for ${lowerCaseDay}:`, exercise); 
+        console.log(`[addExerciseToDay] Adding exercise to slot for ${lowerCaseDay}:`, exercise, `Sets: ${sets}, Reps: ${reps}`);
         const exerciseElement = document.createElement('div');
-        exerciseElement.className = 'workout-exercise'; 
-        
+        exerciseElement.className = 'workout-exercise';
+        // Store sets and reps as data attributes
+        exerciseElement.dataset.sets = sets;
+        exerciseElement.dataset.reps = reps;
+        exerciseElement.dataset.caloriesPerSet = exercise.calories; // Store base calories per set
+
         exerciseElement.innerHTML = `
             <h4 class="exercise-name">${exercise.name}</h4>
-            <p class="exercise-calories-info">${exercise.calories} calories</p>
-            <button class="remove-exercise-btn">&times;</button> 
+            <p class="exercise-sets-reps">${sets} sets x ${reps} reps</p>
+            <p class="exercise-calories-info">${exercise.calories} calories / set</p>
+            <button class="remove-exercise-btn">&times;</button>
         `;
         // Append element first
-        slot.appendChild(exerciseElement); 
+        slot.appendChild(exerciseElement);
 
-        // --- Real-time Chart Update --- 
+        // --- Real-time Chart Update (Still based on calories per set) ---
         if (window.calorieChart) {
             const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
             const dayIndex = days.indexOf(lowerCaseDay);
             if (dayIndex !== -1) {
+                // Note: We still add the base 'calories per set' to the chart, NOT calories * sets.
                 const currentCalories = window.calorieChart.data.datasets[0].data[dayIndex] || 0;
                 const addedCalories = Number(exercise.calories) || 0;
                 window.calorieChart.data.datasets[0].data[dayIndex] = currentCalories + addedCalories;
                 window.calorieChart.update(); // Update chart immediately
-                console.log(`[addExerciseToDay] Chart updated for day ${dayIndex}. New total: ${currentCalories + addedCalories}`);
+                console.log(`[addExerciseToDay] Chart updated for day ${dayIndex}. Added ${addedCalories} (base per set). New total: ${currentCalories + addedCalories}`);
             }
         }
-        // --- End Real-time Chart Update --- 
+        // --- End Real-time Chart Update ---
 
         // Save after updating chart and adding to DOM
-        saveWorkoutPlan(); 
+        saveWorkoutPlan();
 
     } else {
         console.error(`[addExerciseToDay] Could not find slot for day: ${lowerCaseDay}`);
@@ -1045,58 +1141,84 @@ function addExerciseToDay(exercise, day) {
     }
 }
 
-// Reverted loadWorkoutPlan
+// Modified loadWorkoutPlan
 async function loadWorkoutPlan() {
     try {
         const response = await fetch(WORKOUT_PLAN_API_URL);
         if (!response.ok) {
+            // Handle cases where the plan might not exist (e.g., 404 on first load)
+             if (response.status === 404) {
+                 console.log("[loadWorkoutPlan] No existing plan found on server (404). Initializing empty chart.");
+                 initializeCalorieChart(); // Initialize empty chart
+                 // Clear any potential leftover exercises in the DOM slots
+                 const slotsContainer = document.getElementById('workout-slots');
+                 if (slotsContainer) {
+                     slotsContainer.querySelectorAll('.workout-slot .workout-exercise').forEach(el => el.remove());
+                 }
+                 return; // Exit function, nothing to load
+             }
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const planData = await response.json();
 
         const slotsContainer = document.getElementById('workout-slots');
+        // Clear existing exercises before loading new ones
         slotsContainer.querySelectorAll('.workout-slot .workout-exercise').forEach(el => el.remove());
-        
-        initializeCalorieChart();
+
+        initializeCalorieChart(); // Re-initialize or clear the chart
 
         const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-        
+
         console.log("[loadWorkoutPlan] Fetched plan data:", planData);
 
         for (const day in planData) {
-            const dayIndex = days.indexOf(day.toLowerCase());
-            if (dayIndex !== -1) {
-                const slot = slotsContainer.querySelector(`.workout-slot[data-day="${day.toLowerCase()}"]`);
-                if (slot) {
-                    let dayTotalCalories = 0;
-                    planData[day].forEach(exercise => {
-                        const exerciseElement = document.createElement('div');
-                        exerciseElement.className = 'workout-exercise';
+             // Ensure day exists in our expected days array
+            const lowerCaseDay = day.toLowerCase();
+            if (!days.includes(lowerCaseDay)) continue;
 
-                        exerciseElement.innerHTML = `
-                            <h4 class="exercise-name">${exercise.name}</h4>
-                            <p class="exercise-calories-info">${exercise.calories} calories</p>
-                            <button class="remove-exercise-btn">&times;</button>
-                        `;
-                        slot.appendChild(exerciseElement);
-                        // Ensure calories are treated as numbers
-                        dayTotalCalories += Number(exercise.calories) || 0; 
-                    });
-                    
-                    // Update chart data for the corresponding day
-                    if (window.calorieChart) {
-                        window.calorieChart.data.datasets[0].data[dayIndex] = dayTotalCalories;
-                        // Log data assignment
-                        console.log(`[loadWorkoutPlan] Setting chart data for day ${dayIndex} (${day}) to: ${dayTotalCalories}`);
-                        console.log(`[loadWorkoutPlan] Chart data array is now:`, JSON.stringify(window.calorieChart.data.datasets[0].data));
-                    }
+            const dayIndex = days.indexOf(lowerCaseDay);
+            const slot = slotsContainer.querySelector(`.workout-slot[data-day="${lowerCaseDay}"]`);
+
+            if (slot && Array.isArray(planData[day])) { // Check if data for the day is an array
+                let dayTotalCalories = 0;
+                planData[day].forEach(exercise => {
+                    // Backend currently doesn't return sets/reps, so we use defaults/placeholders
+                    const sets = exercise.sets || '-'; // Placeholder if not provided
+                    const reps = exercise.reps || '-'; // Placeholder if not provided
+                    const caloriesPerSet = Number(exercise.calories) || 0;
+
+                    const exerciseElement = document.createElement('div');
+                    exerciseElement.className = 'workout-exercise';
+                    // Store data attributes, even if defaults/placeholders
+                    exerciseElement.dataset.sets = sets;
+                    exerciseElement.dataset.reps = reps;
+                    exerciseElement.dataset.caloriesPerSet = caloriesPerSet;
+
+                    exerciseElement.innerHTML = `
+                        <h4 class="exercise-name">${exercise.name}</h4>
+                         <p class="exercise-sets-reps">${sets === '-' ? '(Sets/Reps not saved)' : `${sets} sets x ${reps} reps`}</p>
+                        <p class="exercise-calories-info">${caloriesPerSet} calories / set</p>
+                        <button class="remove-exercise-btn">&times;</button>
+                    `;
+                    slot.appendChild(exerciseElement);
+                    // Ensure calories are treated as numbers for the chart
+                    dayTotalCalories += caloriesPerSet; // Add base calories per set to chart total
+                });
+
+                // Update chart data for the corresponding day
+                if (window.calorieChart && dayIndex !== -1) {
+                    window.calorieChart.data.datasets[0].data[dayIndex] = dayTotalCalories;
+                    console.log(`[loadWorkoutPlan] Setting chart data for day ${dayIndex} (${day}) to: ${dayTotalCalories}`);
                 }
+            } else if (!Array.isArray(planData[day])) {
+                console.warn(`[loadWorkoutPlan] Data for day '${day}' is not an array:`, planData[day]);
+            } else {
+                 console.warn(`[loadWorkoutPlan] Could not find slot DOM element for day: ${lowerCaseDay}`);
             }
         }
 
         // Ensure chart exists and update display
         if (window.calorieChart) {
-            // Log final data before update
             console.log(`[loadWorkoutPlan] Final chart data before update:`, JSON.stringify(window.calorieChart.data.datasets[0].data));
             window.calorieChart.update();
             console.log("[loadWorkoutPlan] Chart updated successfully after loading plan");
@@ -1106,11 +1228,16 @@ async function loadWorkoutPlan() {
 
     } catch (error) {
         console.error("Error loading workout plan:", error);
-        throw error; 
+        // Don't re-throw, allow the page to load partially
+        // Initialize chart even on error to prevent subsequent errors
+        if (!window.calorieChart) {
+             initializeCalorieChart();
+        }
     }
 }
 
-// Reverted saveWorkoutPlan
+
+// Modified saveWorkoutPlan
 async function saveWorkoutPlan() {
     const planData = {};
     const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
@@ -1126,29 +1253,40 @@ async function saveWorkoutPlan() {
                 const nameElement = exerciseElement.querySelector('.exercise-name');
                 const name = nameElement?.textContent;
 
-                const caloriesElement = exerciseElement.querySelector('.exercise-calories-info');
-                const caloriesText = caloriesElement?.textContent;
-                const caloriesMatch = caloriesText?.match(/(\d+)/);
-                const calories = caloriesMatch ? parseInt(caloriesMatch[1], 10) : 0;
+                // Retrieve data from data attributes
+                const sets = exerciseElement.dataset.sets;
+                const reps = exerciseElement.dataset.reps;
+                const caloriesPerSet = exerciseElement.dataset.caloriesPerSet; // Get base calories
 
-                // Removed sets/reps extraction
-
-                if (name) {
-                    exercises.push({ name, calories }); // Only save name and calories
+                if (name && sets && reps && caloriesPerSet) {
+                    exercises.push({
+                        name: name,
+                        sets: parseInt(sets, 10), // Send as number
+                        reps: parseInt(reps, 10), // Send as number
+                        calories: parseInt(caloriesPerSet, 10) // Send base calories per set
+                    });
                 } else {
-                    console.warn(`[saveWorkoutPlan] Skipping exercise, name not found:`, exerciseElement);
+                    console.warn(`[saveWorkoutPlan] Skipping exercise, missing data (name, sets, reps, or caloriesPerSet):`, {
+                         name: name,
+                         sets: sets,
+                         reps: reps,
+                         caloriesPerSet: caloriesPerSet,
+                         element: exerciseElement
+                    });
                 }
             });
             console.log(`[saveWorkoutPlan] Collected exercises for day '${day}':`, exercises);
-            if (exercises.length > 0) {
-                 planData[day] = exercises;
-            }
+            // Always include the day key, even if empty, to potentially clear it on the backend if needed in the future.
+            planData[day] = exercises;
+
         } else {
             console.warn(`[saveWorkoutPlan] Slot not found for day: ${day}`);
         }
     });
 
     console.log("[saveWorkoutPlan] Final planData collected:", planData);
+    console.log("[saveWorkoutPlan] Sending data to backend (backend will ignore sets/reps for now):", JSON.stringify(planData));
+
 
     try {
         const response = await fetch(WORKOUT_PLAN_API_URL, {
@@ -1156,27 +1294,29 @@ async function saveWorkoutPlan() {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(planData), 
+            body: JSON.stringify(planData),
         });
 
         if (!response.ok) {
              let errorBody = await response.text();
              console.error("[saveWorkoutPlan] Server responded with error:", response.status, errorBody);
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error(`HTTP error! status: ${response.status} - ${errorBody}`);
         }
 
         const result = await response.json();
-        console.log("Workout plan saved successfully:", result.message);
-        
-        // Reverted the logic for reloading
-        // await loadWorkoutPlan(); // Re-enable simple reload if needed, but removed for now to match pre-sets/reps state
+        console.log("Workout plan save request sent successfully (sets/reps ignored by backend):", result.message);
+
+        // No reload needed here as the DOM already reflects the latest state.
+        // Reloading via loadWorkoutPlan() would lose the sets/reps shown in the DOM.
 
     } catch (error) {
         console.error("Error saving workout plan:", error);
+        // Optionally show an error message to the user
+        // alert(`Error saving workout plan: ${error.message}`);
     }
 }
 
-// Handle exercise removal function
+// Handle exercise removal function (no change needed for sets/reps logic currently)
 function handleRemoveExercise(event) {
     if (event.target.classList.contains('remove-exercise-btn')) {
         console.log('[handleRemoveExercise] Remove button clicked');
