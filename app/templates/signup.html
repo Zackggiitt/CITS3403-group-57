@@ -14,45 +14,50 @@
     </nav>
 
     <div class="signup-container">
-        <form action="/submit_form" method="POST" class="signup-form">
+        <form method="POST" class="signup-form">
+            {% if error %}
+                <div class="error-message">{{ error }}</div>
+            {% endif %}
+
+            {{ form.hidden_tag() }}
             <h2>Create Your Account</h2>
 
             <div class="form-group">
-                <label for="first-name">First Name</label>
-                <input type="text" id="first-name" name="first-name" placeholder="Enter Your First Name" required>
+                {{ form.first_name.label }}
+                {{ form.first_name(class="form-control", placeholder="Enter Your First Name") }}
             </div>
 
             <div class="form-group">
-                <label for="last-name">Last Name</label>
-                <input type="text" id="last-name" name="last-name" placeholder="Enter Your Last Name" required>
+                {{ form.last_name.label }}
+                {{ form.last_name(class="form-control", placeholder="Enter Your Last Name") }}
             </div>
 
             <div class="form-group">
-                <label for="email">Email</label>
+                {{ form.email.label }}
                 <div class="input-container">
                     <i class="fas fa-envelope icon"></i>
-                    <input type="email" id="email" name="email" placeholder="Enter Your Email" required>
+                    {{ form.email(class="form-control", placeholder="Enter Your Email") }}
                 </div>
             </div>
 
             <div class="form-group">
-                <label for="password">Password</label>
+                {{ form.password.label }}
                 <div class="input-container">
                     <i class="fas fa-lock icon"></i>
-                    <input type="password" id="password" name="password" placeholder="Enter Your Password" required>
+                    {{ form.password(class="form-control", placeholder="Enter Your Password") }}
                     <i class="fas fa-eye toggle-password" onclick="togglePasswordVisibility()"></i>
                 </div>
             </div>
 
             <div class="form-group">
-                <label for="confirm-password">Confirm Password</label>
+                {{ form.confirm_password.label }}
                 <div class="input-container">
                     <i class="fas fa-lock icon"></i>
-                    <input type="password" id="confirm-password" name="confirm-password" placeholder="Confirm Password" required>
+                    {{ form.confirm_password(class="form-control", placeholder="Confirm Password") }}
                 </div>
             </div>
 
-            <button type="submit" class="submit-btn">Create Account</button>
+            {{ form.submit(class="submit-btn") }}
 
             <div class="link">
                 <p>Already have an account?<a href="{{ url_for('login') }}"> Login</a></p>
