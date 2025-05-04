@@ -1,7 +1,7 @@
 from flask import Flask, render_template, url_for, redirect, request, jsonify, current_app # Import request and jsonify
 from flask_wtf.csrf import CSRFProtect
 from werkzeug.security import generate_password_hash, check_password_hash
-from forms import SignupForm, LoginForm
+from .forms import SignupForm, LoginForm
 from config import Config # Import configuration
 from flask_sqlalchemy import SQLAlchemy # Import SQLAlchemy
 from flask_migrate import Migrate # Import Migrate
