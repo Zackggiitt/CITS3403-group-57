@@ -3,6 +3,7 @@
 {% block head %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>FitPal - Workout Tools</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='workout_tools.css') }}">
@@ -417,13 +418,13 @@
                     </div>
                 </div>
                 <!-- Moved calorie-tracker outside planner-container -->
-                <div class="calorie-tracker">
-                    <h3>Weekly Calorie Burn</h3>
+                    <div class="calorie-tracker">
+                        <h3>Weekly Calorie Burn</h3>
                     <div class="chart-container">
                         <canvas id="calorieChart"></canvas>
                     </div>
                 </div>
-            </section>
+        </section>
 
         <!-- BMI Calculator Section -->
         <section id="bmi-calculator" class="tool-section">

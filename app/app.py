@@ -146,53 +146,58 @@ def save_workout_plan():
     """Saves the workout plan received from the frontend."""
     try:
         plan_data = request.get_json()
-        if not plan_data:
-            return jsonify({"error": "No data received"}), 400
+        # Modified check: Allow empty dictionary {} but reject None or other falsy values
+        if plan_data is None:
+            return jsonify({"error": "Invalid or empty request body"}), 400
 
         # Clear existing plan entries (assuming a single plan for now)
-        # In a multi-user scenario, you would filter by user_id
         models.WorkoutPlan.query.delete()
         
         new_entries = []
-        for day, exercises in plan_data.items():
-            if isinstance(exercises, list):
-                for exercise in exercises:
-                    # Ensure required fields are present and extract them
-                    name = exercise.get('name')
-                    # Frontend sends 'calories' which is calories_per_set
-                    calories_per_set = exercise.get('calories') 
-                    sets = exercise.get('sets')
-                    reps = exercise.get('reps')
+        # Check if plan_data is actually a dictionary before iterating
+        if isinstance(plan_data, dict):
+            for day, exercises in plan_data.items():
+                if isinstance(exercises, list):
+                    for exercise in exercises:
+                        # Ensure required fields are present and extract them
+                        name = exercise.get('name')
+                        # Frontend sends 'calories' which is calories_per_set
+                        calories_per_set = exercise.get('calories') 
+                        sets = exercise.get('sets')
+                        reps = exercise.get('reps')
 
-                    # Basic validation
-                    if not all([name, calories_per_set is not None, sets is not None, reps is not None]):
-                         current_app.logger.warning(f"Skipping invalid exercise data for day {day}: {exercise}")
-                         continue # Skip this exercise if data is missing
-                    
-                    try:
-                        # Ensure numeric types
-                        calories_per_set = int(calories_per_set)
-                        sets = int(sets)
-                        reps = int(reps)
-                    except (ValueError, TypeError) as ve:
-                         current_app.logger.warning(f"Skipping exercise due to invalid numeric value for day {day}: {exercise} - Error: {ve}")
-                         continue # Skip if conversion fails
+                        # Basic validation
+                        if not all([name, calories_per_set is not None, sets is not None, reps is not None]):
+                             current_app.logger.warning(f"Skipping invalid exercise data for day {day}: {exercise}")
+                             continue # Skip this exercise if data is missing
+                        
+                        try:
+                            # Ensure numeric types
+                            calories_per_set = int(calories_per_set)
+                            sets = int(sets)
+                            reps = int(reps)
+                        except (ValueError, TypeError) as ve:
+                             current_app.logger.warning(f"Skipping exercise due to invalid numeric value for day {day}: {exercise} - Error: {ve}")
+                             continue # Skip if conversion fails
 
-                    # Create new entry using correct model field names
-                    new_entry = models.WorkoutPlan(
-                        day_of_week=day.lower(),
-                        exercise_name=name,
-                        calories=calories_per_set, # Map to the 'calories' field in model
-                        sets=sets,
-                        reps=reps
-                    )
-                    new_entries.append(new_entry)
-            else:
-                current_app.logger.warning(f"Invalid data format for day {day}: Expected a list, got {type(exercises)}")
+                        # Create new entry using correct model field names
+                        new_entry = models.WorkoutPlan(
+                            day_of_week=day.lower(),
+                            exercise_name=name,
+                            calories=calories_per_set, # Map to the 'calories' field in model
+                            sets=sets,
+                            reps=reps
+                        )
+                        new_entries.append(new_entry)
+                else:
+                    current_app.logger.warning(f"Invalid data format for day {day}: Expected a list, got {type(exercises)}")
+        else:
+             # Handle case where plan_data is not a dictionary (e.g., if {} was sent but we want to be extra safe)
+             current_app.logger.warning(f"Received plan_data is not a dictionary: {type(plan_data)}")
 
 
         if not new_entries:
-             current_app.logger.info("No valid exercises found in the submitted plan data.")
+             current_app.logger.info("No valid exercises found in the submitted plan data. Clearing plan.")
              # Commit the delete if no new entries are added
              db.session.commit()
              return jsonify({"message": "Workout plan cleared or no valid exercises submitted."}), 200

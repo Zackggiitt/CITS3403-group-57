@@ -602,9 +602,6 @@ document.addEventListener('DOMContentLoaded', function () {
     loadWorkoutPlan().catch(error => {
         console.error("Error loading workout plan:", error);
     });
-    
-    // Add listener to handle remove buttons
-    document.addEventListener('click', handleRemoveExercise);
 });
 
 // Load exercises into the grid
@@ -879,36 +876,124 @@ function setupEventListeners() {
 }
 
 // Define the handler function separately for clarity
-function handleDocumentClick(e) {
-    const target = e.target;
+async function handleDocumentClick(e) {
+    console.log("[handleDocumentClick] Click detected on:", e.target);
 
-    // Handle clicks on category cards
-    const categoryCard = target.closest('.category-card');
+    // --- Handle clicks on Day Selection Buttons inside the Exercise Modal ---
+    const dayButton = e.target.closest('.day-selection-container .day-button');
+    if (dayButton) {
+        console.log("[handleDocumentClick] Day button clicked:", dayButton.dataset.day);
+        const day = dayButton.dataset.day;
+        const exerciseJson = dayButton.closest('.modal-content').dataset.currentExercise; // Get data from modal content
+
+        if (!exerciseJson) {
+            console.error("[handleDocumentClick] Could not find exercise data on modal.");
+            return;
+        }
+
+        try {
+            const exerciseData = JSON.parse(exerciseJson);
+            console.log("[handleDocumentClick] Parsed exercise data:", exerciseData);
+
+            // Show the Sets/Reps prompt instead of directly adding
+            showSetsRepsPrompt(exerciseData, day);
+
+            // Close the main exercise modal after clicking a day button
+            const exerciseModal = document.getElementById('exercise-modal');
+            if (exerciseModal) {
+                exerciseModal.style.display = 'none';
+            }
+
+        } catch (error) {
+            console.error("[handleDocumentClick] Error parsing exercise data or adding to workout:", error);
+            alert("Error processing exercise selection."); // User feedback
+        }
+        return; // Stop further processing if it was a day button click
+    }
+
+    // --- Handle clicks on Category Cards ---
+    const categoryCard = e.target.closest('.category-card');
     if (categoryCard) {
         const category = categoryCard.dataset.category;
-        const categoryFilter = document.getElementById('category-filter');
-        if(categoryFilter) categoryFilter.value = category;
-        loadExercises(category);
-        return; // Handled category click
+        console.log("[handleDocumentClick] Category card clicked:", category);
+        if (category) {
+            loadExercises(category);
+        }
+        return; // Stop further processing
     }
 
-    // Handle clicks related to exercise details modal
-    const viewDetailsButton = target.closest('.view-details-btn');
-
-    if (viewDetailsButton) {
-        const exerciseDataString = viewDetailsButton.dataset.exercise;
-        if (exerciseDataString) {
+    // --- Handle clicks on Exercise Cards (to open modal) ---
+    const exerciseCard = e.target.closest('.exercise-card');
+    if (exerciseCard) {
+        const exerciseJson = exerciseCard.dataset.exercise;
+        console.log("[handleDocumentClick] Exercise card clicked. Data:", exerciseJson);
+        if (exerciseJson) {
             try {
-                const exercise = JSON.parse(exerciseDataString);
-                showExerciseModal(exercise);
-            } catch (parseError) {
-                console.error("Error parsing exercise data for view details:", parseError, exerciseDataString);
+                const exerciseData = JSON.parse(exerciseJson);
+                 openExerciseModal(exerciseData); // Pass parsed data
+            } catch (error) {
+                console.error("[handleDocumentClick] Error parsing exercise data from card:", error);
+            }
+        }
+        return; // Stop further processing
+    }
+
+     // --- Handle clicks on Remove Exercise Button ---
+    const removeButton = e.target.closest('.remove-exercise-btn');
+    if (removeButton) {
+        console.log("[handleDocumentClick] Remove button clicked.");
+        const exerciseElement = removeButton.closest('.workout-exercise');
+        if (exerciseElement) {
+            const daySlot = exerciseElement.closest('.workout-slot');
+            const day = daySlot ? daySlot.dataset.day : null;
+            console.log(`[handleDocumentClick] Attempting to remove exercise from day: ${day}`);
+
+            if (day) {
+                // IMPORTANT: Remove the element *before* saving
+                // This ensures saveWorkoutPlan reads the state *without* the removed item.
+                exerciseElement.remove();
+                console.log("[handleDocumentClick] Exercise element removed from DOM.");
+
+                // Now save the plan which reflects the removal
+                try {
+                    await saveWorkoutPlan();
+                    console.log(`[handleDocumentClick] Plan saved successfully after removing exercise from ${day}.`);
+                    // loadWorkoutPlan is called inside saveWorkoutPlan on success, so no need here.
+                } catch (error) {
+                     console.error("[handleDocumentClick] Error during saveWorkoutPlan after removing exercise:", error);
+                     // Optional: Add the element back if save fails? Or rely on full reload.
+                     alert("Failed to update the plan after removing the exercise. Please refresh.");
+                 }
+            } else {
+                console.warn("[handleDocumentClick] Could not determine day for removed exercise. Element removed but plan not saved.");
+                 // If we couldn't find the day, just remove visually without saving.
+                 exerciseElement.remove();
             }
         } else {
-            console.warn("View details button clicked, but no data-exercise attribute found.");
+            console.error("[handleDocumentClick] Could not find parent '.workout-exercise' element for the remove button.");
         }
+        return; // Stop further processing
     }
-    // If the click was not on any handled element, the function simply exits
+
+
+    // --- Handle clicks on Modal Close Buttons ---
+    if (e.target.matches('.close-modal') || e.target.matches('.close-prompt-btn')) {
+        console.log("[handleDocumentClick] Close button clicked.");
+        const modal = e.target.closest('.modal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+        return; // Stop further processing
+    }
+
+    // --- Handle clicks outside of Modals (to close them) ---
+    if (e.target.matches('.modal')) {
+        console.log("[handleDocumentClick] Click outside modal content detected.");
+        e.target.style.display = 'none';
+        return; // Stop further processing
+    }
+
+    console.log("[handleDocumentClick] Click did not match any specific handler.");
 }
 
 // Show exercise modal
@@ -1099,10 +1184,10 @@ function addExerciseToDay(exercise, day, sets, reps) {
     const lowerCaseDay = day.toLowerCase();
     const slot = document.querySelector(`.workout-slot[data-day="${lowerCaseDay}"]`);
 
-    if (slot) {
+            if (slot) {
         console.log(`[addExerciseToDay] Adding exercise to slot for ${lowerCaseDay}:`, exercise, `Sets: ${sets}, Reps: ${reps}`);
-        const exerciseElement = document.createElement('div');
-        exerciseElement.className = 'workout-exercise';
+                const exerciseElement = document.createElement('div');
+                exerciseElement.className = 'workout-exercise';
         const caloriesPerSet = Number(exercise.calories) || 0;
         const totalCalories = caloriesPerSet * sets;
 
@@ -1111,14 +1196,14 @@ function addExerciseToDay(exercise, day, sets, reps) {
         exerciseElement.dataset.reps = reps;
         exerciseElement.dataset.caloriesPerSet = caloriesPerSet;
 
-        exerciseElement.innerHTML = `
+                exerciseElement.innerHTML = `
             <h4 class="exercise-name">${exercise.name}</h4>
             <p class="exercise-sets-reps">${sets} sets x ${reps} reps</p>
             <p class="exercise-calories-info">${totalCalories} calories (${caloriesPerSet}/set)</p> <!-- Display total and per set -->
             <button class="remove-exercise-btn">&times;</button>
         `;
         // Append element first
-        slot.appendChild(exerciseElement);
+                slot.appendChild(exerciseElement);
 
         // --- Real-time Chart Update (Now using total calories) ---
         if (window.calorieChart) {
@@ -1236,106 +1321,124 @@ async function loadWorkoutPlan() {
 
 // Modified saveWorkoutPlan to ensure correct data is sent
 async function saveWorkoutPlan() {
-    const planData = {};
+    console.log("[saveWorkoutPlan] Attempting to save workout plan...");
+    const workoutPlan = {};
     const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-    const slotsContainer = document.getElementById('workout-slots');
-
-    console.log("[saveWorkoutPlan] Starting to collect plan data from DOM...");
 
     days.forEach(day => {
-        const slot = slotsContainer.querySelector(`.workout-slot[data-day="${day}"]`);
-        if (slot) {
-            const exercises = [];
-            slot.querySelectorAll('.workout-exercise').forEach(exerciseElement => {
-                const nameElement = exerciseElement.querySelector('.exercise-name');
-                const name = nameElement?.textContent;
+        // Corrected selector: Find the .workout-slot within the .day-column div with id=day
+        // Note: The HTML structure is actually <div class="day-column"> Monday <div class="workout-slot" data-day="monday">...</div> </div>
+        // So we need to select based on the data-day attribute of the slot itself.
+        const workoutSlotElement = document.querySelector(`.workout-slot[data-day="${day}"]`);
 
-                // Retrieve data from data attributes
-                const sets = exerciseElement.dataset.sets;
-                const reps = exerciseElement.dataset.reps;
-                const caloriesPerSet = exerciseElement.dataset.caloriesPerSet; // Get base calories per set
 
-                if (name && sets && reps && caloriesPerSet) {
-                    exercises.push({
-                        name: name,
-                        sets: parseInt(sets, 10), // Send as number
-                        reps: parseInt(reps, 10), // Send as number
-                        calories: parseInt(caloriesPerSet, 10) // Send BASE calories per set (matching backend expectation)
-                    });
-                } else {
-                    console.warn(`[saveWorkoutPlan] Skipping exercise, missing data:`, {
-                         name, sets, reps, caloriesPerSet, element: exerciseElement
-                    });
-                }
-            });
-            planData[day] = exercises;
-        } else {
-            console.warn(`[saveWorkoutPlan] Slot not found for day: ${day}`);
+        if (!workoutSlotElement) {
+            console.warn(`[saveWorkoutPlan] Workout slot element for day '${day}' not found.`);
+            return; // Skip if the slot doesn't exist
+        }
+        const exercises = [];
+        // Find exercises *within* the correct workout slot
+        workoutSlotElement.querySelectorAll(`.workout-exercise`).forEach(exerciseElement => {
+            const nameElement = exerciseElement.querySelector('.exercise-name'); // Selects <h4>
+
+            // Read data directly from the dataset attributes of the exerciseElement
+            const caloriesPerSet = exerciseElement.dataset.caloriesPerSet ? parseInt(exerciseElement.dataset.caloriesPerSet, 10) : 0;
+            const sets = exerciseElement.dataset.sets ? parseInt(exerciseElement.dataset.sets, 10) : 0;
+            const reps = exerciseElement.dataset.reps ? parseInt(exerciseElement.dataset.reps, 10) : 0;
+
+
+            if (nameElement && nameElement.textContent.trim()) {
+                 const name = nameElement.textContent.trim();
+
+                 // Basic validation for numeric values (already parsed or defaulted to 0)
+                 if (Number.isNaN(caloriesPerSet) || Number.isNaN(sets) || Number.isNaN(reps)) {
+                     console.warn(`[saveWorkoutPlan] Invalid numeric data found for ${name} on ${day}. Skipping.`);
+                     return; // Skip this exercise if data is invalid
+                 }
+
+                 // Push data using the correct field names expected by backend ('calories' for calories_per_set)
+                 exercises.push({
+                     name: name,
+                     calories: caloriesPerSet, // Map dataset.caloriesPerSet to 'calories' field for backend
+                     sets: sets,
+                     reps: reps
+                 });
+                 console.log(`[saveWorkoutPlan] Extracted for ${day}: Name=${name}, CaloriesPerSet=${caloriesPerSet}, Sets=${sets}, Reps=${reps}`);
+             } else {
+                console.warn(`[saveWorkoutPlan] Could not find name or data attributes on element:`, exerciseElement);
+            }
+        });
+        if (exercises.length > 0) {
+            workoutPlan[day] = exercises;
         }
     });
 
-    console.log("[saveWorkoutPlan] Final planData collected:", planData);
-    console.log("[saveWorkoutPlan] Sending data to backend:", JSON.stringify(planData));
+    console.log("[saveWorkoutPlan] Compiled workout plan data:", JSON.stringify(workoutPlan, null, 2));
+
+    // Check if workoutPlan is empty before proceeding
+    if (Object.keys(workoutPlan).length === 0) {
+         console.log("[saveWorkoutPlan] No exercises found in any day slots. Sending request to clear plan.");
+         // Allow sending an empty object if the intention is to clear the plan
+    }
+
+
+    // Get CSRF token from meta tag
+    const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
+    const csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : null;
+    console.log("[saveWorkoutPlan] CSRF Token:", csrfToken); // Log the token
+
+    if (!csrfToken) {
+        console.error("[saveWorkoutPlan] CSRF token not found in meta tag!");
+        alert("Error: CSRF token missing. Please refresh the page."); // Inform user
+        return; // Stop if token is missing
+    }
 
     try {
-        const response = await fetch(WORKOUT_PLAN_API_URL, {
+        const response = await fetch('/api/workout_plan', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                // Add CSRF token header
+                'X-CSRFToken': csrfToken
             },
-            body: JSON.stringify(planData),
+            body: JSON.stringify(workoutPlan) // Send the potentially empty workoutPlan object
         });
 
+        // Log raw response text for debugging non-JSON errors (like the HTML error page)
+         const responseText = await response.text();
+         console.log("[saveWorkoutPlan] Raw server response:", responseText);
+
+
         if (!response.ok) {
-             let errorBody = await response.text();
-             console.error("[saveWorkoutPlan] Server responded with error:", response.status, errorBody);
-            throw new Error(`HTTP error! status: ${response.status} - ${errorBody}`);
+             // Try parsing as JSON, but fall back to text if it fails
+            let errorData;
+            try {
+                errorData = JSON.parse(responseText); // Try parsing the text as JSON
+            } catch (e) {
+                 // If parsing failed, use the raw text in the details
+                 errorData = { error: `Server returned non-JSON error (Status: ${response.status})`, details: responseText };
+            }
+             console.error('[saveWorkoutPlan] Server responded with error:', response.status, errorData);
+             // Display a more user-friendly error if possible
+             const errorMessage = errorData.error || `HTTP error! status: ${response.status}`;
+             // Check if details exist and are not empty before appending
+             const errorDetails = errorData.details && errorData.details.trim() ? `- ${errorData.details}` : '(No further details)';
+             // Throw the error to be caught by the calling function or the catch block below
+             throw new Error(`Error saving workout plan: ${errorMessage} ${errorDetails}`);
         }
 
-        const result = await response.json();
-        console.log("Workout plan save request sent successfully:", result.message);
+         // If response is OK, parse the JSON response
+        const result = JSON.parse(responseText);
+         console.log('[saveWorkoutPlan] Workout plan saved successfully:', result);
+
+         // Reload the plan ONLY if the save was successful
+         await loadWorkoutPlan(); // Reload plan to reflect changes and update chart
+
 
     } catch (error) {
-        console.error("Error saving workout plan:", error);
-    }
-}
-
-// Modified handleRemoveExercise to calculate total calories removed
-function handleRemoveExercise(event) {
-    if (event.target.classList.contains('remove-exercise-btn')) {
-        console.log('[handleRemoveExercise] Remove button clicked');
-        const button = event.target;
-        const exerciseElement = button.closest('.workout-exercise');
-        const slotElement = button.closest('.workout-slot');
-
-        if (exerciseElement && slotElement) {
-            // Get data *before* removing
-            const day = slotElement.dataset.day;
-            // Get sets and calories per set from data attributes
-            const sets = parseInt(exerciseElement.dataset.sets, 10) || 0;
-            const caloriesPerSet = parseInt(exerciseElement.dataset.caloriesPerSet, 10) || 0;
-            const removedTotalCalories = sets * caloriesPerSet;
-
-            const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-            const dayIndex = days.indexOf(day);
-
-            // Remove from DOM
-            exerciseElement.remove();
-
-            // --- Real-time Chart Update (Subtract total calories) ---
-            if (window.calorieChart && dayIndex !== -1) {
-                const currentCalories = window.calorieChart.data.datasets[0].data[dayIndex] || 0;
-                window.calorieChart.data.datasets[0].data[dayIndex] = Math.max(0, currentCalories - removedTotalCalories); // Ensure not negative
-                window.calorieChart.update(); // Update chart immediately
-                console.log(`[handleRemoveExercise] Chart updated for day ${dayIndex}. Removed ${removedTotalCalories} calories. New total: ${Math.max(0, currentCalories - removedTotalCalories)}`);
-            }
-            // --- End Real-time Chart Update ---
-
-            // Save updated plan immediately
-            saveWorkoutPlan();
-            console.log('[handleRemoveExercise] Exercise removed and plan saved');
-        } else {
-            console.error('[handleRemoveExercise] Could not find exercise or slot element.');
-        }
+        // Log the error caught from the fetch operation or thrown due to !response.ok
+        console.error('[saveWorkoutPlan] Error during fetch operation:', error);
+        // Display error to user
+        alert(`Failed to save workout plan: ${error.message}`); // Provide feedback to user
     }
 } 
