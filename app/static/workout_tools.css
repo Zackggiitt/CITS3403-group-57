@@ -308,56 +308,56 @@
 }
 
 /* Wrapper div for the canvas */
-.chart-container { 
+.chart-container {
     position: relative;
-    max-width: 1100px; /* 增加图表容器宽度 */
+    max-width: 1100px; /* Increase chart container width */
     width: 100%; /* Full width of parent */
-    height: 550px; /* 增加图表高度 */
+    height: 550px; /* Increase chart height */
     margin: 0 auto; /* Center the chart */
-    background-color: rgba(248, 249, 250, 0.5); /* 减少背景色饱和度，使其更淡 */
-    padding: 25px 30px; /* 调整内边距，增加水平空间 */
+    background-color: rgba(248, 249, 250, 0.5); /* Reduce background color saturation to make it lighter */
+    padding: 25px 30px; /* Adjust padding, increase horizontal space */
     border-radius: 12px; /* Increase border radius */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08); /* Enhance shadow */
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    flex: 1; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
 }
 
 /* Styles for the canvas itself */
 #calorieChart {
-    display: block; 
-    width: 100%; 
+    display: block;
+    width: 100%;
     height: 100%;
-    max-height: 520px; /* 增加canvas最大高度 */
+    max-height: 520px; /* Increase canvas max height */
 }
 
 /* Responsive adjustments */
-@media (max-width: 992px) { 
+@media (max-width: 992px) {
     .calorie-tracker {
-        padding: 2rem; 
-        min-height: 550px; /* 调整响应式高度 */
+        padding: 2rem;
+        min-height: 550px; /* Adjust responsive height */
     }
     .calorie-tracker h3 {
         font-size: 1.5em;
     }
-    .chart-container { 
-        min-height: 450px; /* 调整响应式高度 */
+    .chart-container {
+        min-height: 450px; /* Adjust responsive height */
         padding: 20px;
     }
 }
 
 @media (max-width: 768px) {
     .calorie-tracker {
-        padding: 1.5rem; 
-        min-height: 450px; /* 调整响应式高度 */
+        padding: 1.5rem;
+        min-height: 450px; /* Adjust responsive height */
     }
     .calorie-tracker h3 {
         font-size: 1.3em;
         margin-bottom: 1.5rem;
     }
-    .chart-container { 
-        min-height: 400px; /* 调整响应式高度 */
+    .chart-container {
+        min-height: 400px; /* Adjust responsive height */
         padding: 15px;
     }
 }
