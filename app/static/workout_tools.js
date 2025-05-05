@@ -1,4 +1,6 @@
 // Exercise Data
+const WORKOUT_PLAN_API_URL = '/api/workout_plan';
+
 const exercises = {
     chest: [
         {
@@ -591,10 +593,15 @@ const exercises = {
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', function () {
-    loadExercises();
+    // loadExercises();
     initializeCalorieChart();
     setupEventListeners();
     initializeCalorieCalculator();
+    
+    // Load real workout plan data
+    loadWorkoutPlan().catch(error => {
+        console.error("Error loading workout plan:", error);
+    });
 });
 
 // Load exercises into the grid
@@ -647,29 +654,144 @@ function createExerciseCard(exercise) {
 
 // Initialize calorie chart
 function initializeCalorieChart() {
-    const ctx = document.getElementById('calorieChart').getContext('2d');
+    const ctx = document.getElementById('calorieChart');
+    if (!ctx) {
+        console.error('Chart canvas element not found');
+        return;
+    }
+    
+    // Ensure Chart.js library is loaded
+    if (typeof Chart === 'undefined') {
+        console.error('Chart.js library is not loaded, chart cannot be initialized');
+        return;
+    }
+    
+    // If a chart instance already exists, destroy it first
+    if (window.calorieChart instanceof Chart) {
+        window.calorieChart.destroy();
+        console.log('Destroyed existing chart instance');
+    }
+    
+    // Initialize empty data
+    const initialData = [0, 0, 0, 0, 0, 0, 0];
+    
+    try {
     const chart = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                labels: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
             datasets: [{
                 label: 'Calories Burned',
-                data: [0, 0, 0, 0, 0, 0, 0],
-                backgroundColor: 'rgba(76, 175, 80, 0.6)',
+                    data: initialData,
+                    backgroundColor: 'rgba(76, 175, 80, 0.8)',
                 borderColor: 'rgba(76, 175, 80, 1)',
-                borderWidth: 1
+                    borderWidth: 2,
+                    borderRadius: 8,
+                    barThickness: 70,
+                    maxBarThickness: 90
             }]
         },
         options: {
             responsive: true,
+                maintainAspectRatio: false,
+                layout: {
+                    padding: {
+                        top: 30,
+                        right: 40,
+                        bottom: 30, 
+                        left: 30
+                    }
+                },
             scales: {
                 y: {
-                    beginAtZero: true
-                }
+                        beginAtZero: true,
+                        suggestedMax: 300,
+                        grid: {
+                            color: 'rgba(200, 200, 200, 0.2)'
+                        },
+                        ticks: {
+                            stepSize: 50,
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            },
+                            padding: 15,
+                            callback: function(value) {
+                                return value + ' cal';
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Calories',
+                            font: {
+                                size: 20,
+                                weight: 'bold'
+                            },
+                            padding: {
+                                top: 15,
+                                bottom: 15
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            },
+                            color: '#333',
+                            padding: 20
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            font: {
+                                size: 18,
+                                weight: 'bold'
+                            },
+                            padding: 25,
+                            color: '#333'
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleFont: {
+                            size: 18,
+                            weight: 'bold'
+                        },
+                        bodyFont: {
+                            size: 16
+                        },
+                        padding: 18,
+                        callbacks: {
+                            label: function(context) {
+                                return context.formattedValue + ' calories';
+                            }
+                        }
+                    }
+                },
+                animation: {
+                    duration: 1000,
+                    easing: 'easeOutQuart'
             }
         }
     });
+        
+        // Save chart instance to global variable
     window.calorieChart = chart;
+        
+        console.log('Chart initialized successfully', chart);
+        return chart;
+    } catch (error) {
+        console.error('Error initializing chart:', error);
+        return null;
+    }
 }
 
 // Calorie Calculator Functions
@@ -730,35 +852,20 @@ function setupEventListeners() {
         });
     });
 
-    // Category cards
-    document.querySelectorAll('.category-card').forEach(card => {
-        card.addEventListener('click', function () {
-            const category = this.dataset.category;
-            document.getElementById('category-filter').value = category;
-            loadExercises(category);
+    // Improved document click listener to handle exercise details and add-to-workout
+    document.removeEventListener('click', handleDocumentClick); // Remove old listener if exists
+    document.addEventListener('click', handleDocumentClick); // Add the new handler function
+
+    // Close modal listener remains the same
+    const closeModalButton = document.querySelector('.close-modal');
+    if(closeModalButton) {
+        closeModalButton.addEventListener('click', function () {
+            const modal = document.getElementById('exercise-modal');
+            if(modal) modal.style.display = 'none';
         });
-    });
+    }
 
-    // Exercise details modal
-    document.addEventListener('click', function (e) {
-        if (e.target.classList.contains('view-details-btn')) {
-            const exercise = JSON.parse(e.target.dataset.exercise);
-            showExerciseModal(exercise);
-        }
-    });
-
-    // Close modal
-    document.querySelector('.close-modal').addEventListener('click', function () {
-        document.getElementById('exercise-modal').style.display = 'none';
-    });
-
-    // Add to workout
-    document.querySelector('.add-to-workout').addEventListener('click', function () {
-        const exercise = JSON.parse(this.dataset.exercise);
-        addToWorkout(exercise);
-    });
-
-    // Calorie Calculator
+    // Calorie Calculator listener remains the same
     const calculatorForm = document.getElementById('calorie-calculator-form');
     if (calculatorForm) {
         calculatorForm.addEventListener('submit', function (e) {
@@ -768,82 +875,570 @@ function setupEventListeners() {
     }
 }
 
+// Define the handler function separately for clarity
+async function handleDocumentClick(e) {
+    console.log("[handleDocumentClick] Click detected on:", e.target);
+
+    // --- Handle clicks on Day Selection Buttons inside the Exercise Modal ---
+    const dayButton = e.target.closest('.day-selection-container .day-button');
+    if (dayButton) {
+        console.log("[handleDocumentClick] Day button clicked:", dayButton.dataset.day);
+        const day = dayButton.dataset.day;
+        const exerciseJson = dayButton.closest('.modal-content').dataset.currentExercise; // Get data from modal content
+
+        if (!exerciseJson) {
+            console.error("[handleDocumentClick] Could not find exercise data on modal.");
+            return;
+        }
+
+        try {
+            const exerciseData = JSON.parse(exerciseJson);
+            console.log("[handleDocumentClick] Parsed exercise data:", exerciseData);
+
+            // Show the Sets/Reps prompt instead of directly adding
+            showSetsRepsPrompt(exerciseData, day);
+
+            // Close the main exercise modal after clicking a day button
+            const exerciseModal = document.getElementById('exercise-modal');
+            if (exerciseModal) {
+                exerciseModal.style.display = 'none';
+            }
+
+        } catch (error) {
+            console.error("[handleDocumentClick] Error parsing exercise data or adding to workout:", error);
+            alert("Error processing exercise selection."); // User feedback
+        }
+        return; // Stop further processing if it was a day button click
+    }
+
+    // --- Handle clicks on Category Cards ---
+    const categoryCard = e.target.closest('.category-card');
+    if (categoryCard) {
+        const category = categoryCard.dataset.category;
+        console.log("[handleDocumentClick] Category card clicked:", category);
+        if (category) {
+            loadExercises(category);
+        }
+        return; // Stop further processing
+    }
+
+    // --- Handle clicks on Exercise Cards (to open modal) ---
+    const exerciseCard = e.target.closest('.exercise-card');
+    if (exerciseCard) {
+        const exerciseJson = exerciseCard.dataset.exercise;
+        console.log("[handleDocumentClick] Exercise card clicked. Data:", exerciseJson);
+        if (exerciseJson) {
+            try {
+                const exerciseData = JSON.parse(exerciseJson);
+                 openExerciseModal(exerciseData); // Pass parsed data
+            } catch (error) {
+                console.error("[handleDocumentClick] Error parsing exercise data from card:", error);
+            }
+        }
+        return; // Stop further processing
+    }
+
+     // --- Handle clicks on Remove Exercise Button ---
+    const removeButton = e.target.closest('.remove-exercise-btn');
+    if (removeButton) {
+        console.log("[handleDocumentClick] Remove button clicked.");
+        const exerciseElement = removeButton.closest('.workout-exercise');
+        if (exerciseElement) {
+            const daySlot = exerciseElement.closest('.workout-slot');
+            const day = daySlot ? daySlot.dataset.day : null;
+            console.log(`[handleDocumentClick] Attempting to remove exercise from day: ${day}`);
+
+            if (day) {
+                // IMPORTANT: Remove the element *before* saving
+                // This ensures saveWorkoutPlan reads the state *without* the removed item.
+                exerciseElement.remove();
+                console.log("[handleDocumentClick] Exercise element removed from DOM.");
+
+                // Now save the plan which reflects the removal
+                try {
+                    await saveWorkoutPlan();
+                    console.log(`[handleDocumentClick] Plan saved successfully after removing exercise from ${day}.`);
+                    // loadWorkoutPlan is called inside saveWorkoutPlan on success, so no need here.
+                } catch (error) {
+                     console.error("[handleDocumentClick] Error during saveWorkoutPlan after removing exercise:", error);
+                     // Optional: Add the element back if save fails? Or rely on full reload.
+                     alert("Failed to update the plan after removing the exercise. Please refresh.");
+                 }
+            } else {
+                console.warn("[handleDocumentClick] Could not determine day for removed exercise. Element removed but plan not saved.");
+                 // If we couldn't find the day, just remove visually without saving.
+                 exerciseElement.remove();
+            }
+        } else {
+            console.error("[handleDocumentClick] Could not find parent '.workout-exercise' element for the remove button.");
+        }
+        return; // Stop further processing
+    }
+
+
+    // --- Handle clicks on Modal Close Buttons ---
+    if (e.target.matches('.close-modal') || e.target.matches('.close-prompt-btn')) {
+        console.log("[handleDocumentClick] Close button clicked.");
+        const modal = e.target.closest('.modal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+        return; // Stop further processing
+    }
+
+    // --- Handle clicks outside of Modals (to close them) ---
+    if (e.target.matches('.modal')) {
+        console.log("[handleDocumentClick] Click outside modal content detected.");
+        e.target.style.display = 'none';
+        return; // Stop further processing
+    }
+
+    console.log("[handleDocumentClick] Click did not match any specific handler.");
+}
+
 // Show exercise modal
 function showExerciseModal(exercise) {
     const modal = document.getElementById('exercise-modal');
+    if (!modal) {
+        console.error("Critical Error: Cannot find modal element #exercise-modal");
+        return;
+    }
+    modal.dataset.exerciseData = JSON.stringify(exercise);
+
+    // --- Populate Modal Content ---
     document.getElementById('modal-exercise-name').textContent = exercise.name;
-
-    // Format instructions properly
-    const instructions = Array.isArray(exercise.instructions)
-        ? exercise.instructions.join('\n')
-        : exercise.instructions;
+    const instructions = Array.isArray(exercise.instructions) ? exercise.instructions.join('\\n') : exercise.instructions;
     document.getElementById('modal-exercise-instructions').textContent = instructions;
-
-    // Format muscles properly
-    const muscles = Array.isArray(exercise.muscles)
-        ? exercise.muscles.join(', ')
-        : exercise.muscles;
+    const muscles = Array.isArray(exercise.muscles) ? exercise.muscles.join(', ') : exercise.muscles;
     document.getElementById('modal-exercise-muscles').textContent = muscles;
-
     document.getElementById('modal-exercise-calories').textContent = `${exercise.calories} calories per set`;
 
-    // Update video iframe
     const videoIframe = document.getElementById('exercise-video');
-    if (exercise.video) {
-        // Extract video ID from URL if it's a full YouTube URL
-        let videoId = exercise.video;
-        if (exercise.video.includes('youtube.com')) {
+    const imageContainer = modal.querySelector('.exercise-video');
+    if (imageContainer) {
+        imageContainer.innerHTML = ''; // Clear previous content
+        if (exercise.video && exercise.video.trim() !== '') {
+             let videoId;
+             try {
+                 if (exercise.video.includes('youtube.com/embed/')) {
+                     videoId = exercise.video.split('/').pop().split('?')[0]; // Extract from embed URL
+                 } else if (exercise.video.includes('youtube.com/watch?v=')) {
             const url = new URL(exercise.video);
-            videoId = url.searchParams.get('v') || url.pathname.split('/').pop();
-        }
-        videoIframe.src = `https://www.youtube.com/embed/${videoId}`;
-        videoIframe.style.display = 'block';
+                     videoId = url.searchParams.get('v'); // Extract from watch URL
     } else {
-        videoIframe.style.display = 'none';
-    }
-
-    // Update image
+                     // Assume it's just the ID if not a standard YouTube URL
+                     videoId = exercise.video;
+                 }
+                 if (videoId) {
+                     const iframe = document.createElement('iframe');
+                     iframe.src = `https://www.youtube.com/embed/${videoId}`;
+                     iframe.className = 'modal-exercise-video'; // Reuse class for consistency
+                     iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
+                     iframe.allowFullscreen = true;
+                     imageContainer.appendChild(iframe);
+                 } else if (exercise.image) { // Fallback to image if video processing fails or no ID found
+                     const modalImage = document.createElement('img');
+                     modalImage.src = exercise.image;
+                     modalImage.alt = exercise.name;
+                     modalImage.className = 'modal-exercise-image'; // Use a different class if needed for styling
+                     imageContainer.appendChild(modalImage);
+                 }
+            } catch (e) {
+                 console.error("Error processing video URL, falling back to image:", e);
+                 // Fallback to image if URL parsing fails
+                 if (exercise.image) {
     const modalImage = document.createElement('img');
     modalImage.src = exercise.image;
     modalImage.alt = exercise.name;
     modalImage.className = 'modal-exercise-image';
-
-    const imageContainer = document.querySelector('.exercise-video');
-    imageContainer.innerHTML = '';
     imageContainer.appendChild(modalImage);
-    imageContainer.appendChild(videoIframe);
+                 }
+             }
+        } else if (exercise.image) { // If no video provided, use image
+            const modalImage = document.createElement('img');
+            modalImage.src = exercise.image;
+            modalImage.alt = exercise.name;
+            modalImage.className = 'modal-exercise-image';
+            imageContainer.appendChild(modalImage);
+        }
+    } else {
+        console.error("Cannot find .exercise-video container in modal");
+    }
 
-    // Store exercise data for the add button
-    document.querySelector('.add-to-workout').dataset.exercise = JSON.stringify(exercise);
+    // --- Generate Day Selection Buttons ---
+    const dayContainer = modal.querySelector('.day-selection-container');
+    if(dayContainer) {
+        generateButtons(dayContainer); // Call function to generate day buttons
+    } else {
+        console.error("[showExerciseModal] Could not find .day-selection-container.");
+    }
 
     // Show modal
     modal.style.display = 'block';
 }
 
-// Add exercise to workout
-function addToWorkout(exercise) {
-    const day = prompt('Which day would you like to add this exercise to? (Monday-Sunday)');
-    if (day) {
-        const dayIndex = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].indexOf(day.toLowerCase());
-        if (dayIndex !== -1) {
-            const slot = document.querySelector(`.workout-slot[data-day="${day.toLowerCase()}"]`);
+// Function to generate day selection buttons inside the main modal
+function generateButtons(container) {
+    container.innerHTML = '';
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    const modalElement = container.closest('#exercise-modal');
+    if (!modalElement) {
+        console.error("Could not find parent modal (#exercise-modal) for day container");
+        return;
+    }
+    const storedExerciseData = modalElement.dataset.exerciseData;
+
+    if (!storedExerciseData) {
+        console.error("Could not find stored exercise data on modal when generating buttons.");
+        return;
+    }
+
+    days.forEach(dayName => {
+        const button = document.createElement('button');
+        button.textContent = dayName;
+        button.className = 'day-select-btn';
+        const dayValue = dayName.toLowerCase();
+        button.dataset.day = dayValue;
+
+        button.addEventListener('click', () => {
+            try {
+                const exerciseToAdd = JSON.parse(storedExerciseData);
+                // Close the main modal
+                modalElement.style.display = 'none';
+                // Show the prompt modal instead of directly adding
+                showSetsRepsPrompt(exerciseToAdd, dayValue);
+            } catch (e) {
+                console.error("Error parsing stored exercise data on day button click:", e);
+            }
+        });
+        container.appendChild(button);
+    });
+}
+
+// New function to show the sets/reps prompt modal
+let currentPromptHandler = null; // To store the event handler
+
+function showSetsRepsPrompt(exercise, day) {
+    const promptModal = document.getElementById('sets-reps-prompt');
+    const exerciseNameEl = document.getElementById('prompt-exercise-name');
+    const setsInput = document.getElementById('prompt-sets');
+    const repsInput = document.getElementById('prompt-reps');
+    const confirmBtn = document.getElementById('confirm-add-exercise-btn');
+    const closeBtn = promptModal.querySelector('.close-prompt-btn');
+
+    if (!promptModal || !exerciseNameEl || !setsInput || !repsInput || !confirmBtn || !closeBtn) {
+        console.error("Could not find all required elements for the sets/reps prompt.");
+        return;
+    }
+
+    // Set exercise name in the prompt title
+    exerciseNameEl.textContent = `Enter Sets and Reps for ${exercise.name}`; 
+    // Reset to default values
+    setsInput.value = 3;
+    repsInput.value = 10;
+
+    // Remove previous listener if exists to prevent duplicates
+    if (currentPromptHandler) {
+        confirmBtn.removeEventListener('click', currentPromptHandler);
+    }
+
+    // Define the new handler for this specific exercise and day
+    currentPromptHandler = () => {
+        const sets = parseInt(setsInput.value, 10);
+        const reps = parseInt(repsInput.value, 10);
+
+        if (isNaN(sets) || sets <= 0) {
+            alert("Please enter a valid number for sets.");
+            return;
+        }
+        if (isNaN(reps) || reps <= 0) {
+            alert("Please enter a valid number for reps.");
+            return;
+        }
+
+        addExerciseToDay(exercise, day, sets, reps); // Add with entered sets/reps
+        promptModal.style.display = 'none'; // Hide prompt after adding
+    };
+
+    // Add the new event listener to the confirm button
+    confirmBtn.addEventListener('click', currentPromptHandler);
+
+    // Add listener for the close button (simple hide)
+     const closeHandler = () => {
+        promptModal.style.display = 'none';
+        closeBtn.removeEventListener('click', closeHandler); // Clean up listener
+        // Also remove the confirm button listener if the prompt is closed without confirming
+        if (currentPromptHandler) {
+             confirmBtn.removeEventListener('click', currentPromptHandler);
+             currentPromptHandler = null;
+        }
+    };
+    closeBtn.addEventListener('click', closeHandler);
+
+    // Show the prompt modal
+    promptModal.style.display = 'block';
+}
+
+// Modified addExerciseToDay to include sets and reps
+function addExerciseToDay(exercise, day, sets, reps) {
+    const lowerCaseDay = day.toLowerCase();
+    const slot = document.querySelector(`.workout-slot[data-day="${lowerCaseDay}"]`);
+
             if (slot) {
+        console.log(`[addExerciseToDay] Adding exercise to slot for ${lowerCaseDay}:`, exercise, `Sets: ${sets}, Reps: ${reps}`);
                 const exerciseElement = document.createElement('div');
                 exerciseElement.className = 'workout-exercise';
+        const caloriesPerSet = Number(exercise.calories) || 0;
+        const totalCalories = caloriesPerSet * sets;
+
+        // Store sets, reps and BASE calories per set as data attributes
+        exerciseElement.dataset.sets = sets;
+        exerciseElement.dataset.reps = reps;
+        exerciseElement.dataset.caloriesPerSet = caloriesPerSet;
+
                 exerciseElement.innerHTML = `
-                    <h4>${exercise.name}</h4>
-                    <p>${exercise.calories} calories/set</p>
-                `;
+            <h4 class="exercise-name">${exercise.name}</h4>
+            <p class="exercise-sets-reps">${sets} sets x ${reps} reps</p>
+            <p class="exercise-calories-info">${totalCalories} calories (${caloriesPerSet}/set)</p> <!-- Display total and per set -->
+            <button class="remove-exercise-btn">&times;</button>
+        `;
+        // Append element first
                 slot.appendChild(exerciseElement);
-                updateCalorieChart(dayIndex, exercise.calories);
+
+        // --- Real-time Chart Update (Now using total calories) ---
+        if (window.calorieChart) {
+            const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+            const dayIndex = days.indexOf(lowerCaseDay);
+            if (dayIndex !== -1) {
+                // Add the TOTAL calories for this exercise (sets * caloriesPerSet)
+                const currentCalories = window.calorieChart.data.datasets[0].data[dayIndex] || 0;
+                window.calorieChart.data.datasets[0].data[dayIndex] = currentCalories + totalCalories;
+                window.calorieChart.update(); // Update chart immediately
+                console.log(`[addExerciseToDay] Chart updated for day ${dayIndex}. Added ${totalCalories} calories. New total: ${currentCalories + totalCalories}`);
             }
+        }
+        // --- End Real-time Chart Update ---
+
+        // Save after updating chart and adding to DOM
+        saveWorkoutPlan();
+
+    } else {
+        console.error(`[addExerciseToDay] Could not find slot for day: ${lowerCaseDay}`);
+        alert(`Error: Could not find the planner slot for ${day}.`);
+    }
+}
+
+// Modified loadWorkoutPlan
+async function loadWorkoutPlan() {
+    try {
+        const response = await fetch(WORKOUT_PLAN_API_URL);
+        if (!response.ok) {
+            if (response.status === 404) {
+                console.log("[loadWorkoutPlan] No existing plan found on server (404). Initializing empty chart.");
+                initializeCalorieChart();
+                const slotsContainer = document.getElementById('workout-slots');
+                if (slotsContainer) {
+                    slotsContainer.querySelectorAll('.workout-slot .workout-exercise').forEach(el => el.remove());
+                }
+                return;
+            }
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const planData = await response.json();
+
+        const slotsContainer = document.getElementById('workout-slots');
+        slotsContainer.querySelectorAll('.workout-slot .workout-exercise').forEach(el => el.remove());
+
+        initializeCalorieChart(); // Re-initialize or clear the chart data
+
+        const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        let chartData = Array(7).fill(0); // Initialize chart data array
+
+        console.log("[loadWorkoutPlan] Fetched plan data:", planData);
+
+        for (const day in planData) {
+            const lowerCaseDay = day.toLowerCase();
+            if (!days.includes(lowerCaseDay)) continue;
+
+            const dayIndex = days.indexOf(lowerCaseDay);
+            const slot = slotsContainer.querySelector(`.workout-slot[data-day="${lowerCaseDay}"]`);
+
+            if (slot && Array.isArray(planData[day])) {
+                let dayTotalCalories = 0;
+                planData[day].forEach(exercise => {
+                    // Backend now returns sets/reps reliably
+                    const sets = parseInt(exercise.sets, 10) || 1; // Default to 1 set if parsing fails
+                    const reps = parseInt(exercise.reps, 10) || 1; // Default to 1 rep
+                    const caloriesPerSet = Number(exercise.calories) || 0;
+                    const totalCalories = caloriesPerSet * sets;
+
+                    const exerciseElement = document.createElement('div');
+                    exerciseElement.className = 'workout-exercise';
+                    exerciseElement.dataset.sets = sets;
+                    exerciseElement.dataset.reps = reps;
+                    exerciseElement.dataset.caloriesPerSet = caloriesPerSet;
+
+                    exerciseElement.innerHTML = `
+                        <h4 class="exercise-name">${exercise.name}</h4>
+                         <p class="exercise-sets-reps">${sets} sets x ${reps} reps</p>
+                        <p class="exercise-calories-info">${totalCalories} calories (${caloriesPerSet}/set)</p>
+                        <button class="remove-exercise-btn">&times;</button>
+                    `;
+                    slot.appendChild(exerciseElement);
+                    // Add TOTAL calories for this exercise to the day's total for the chart
+                    dayTotalCalories += totalCalories;
+                });
+
+                // Update chart data array for the corresponding day
+                if (dayIndex !== -1) {
+                    chartData[dayIndex] = dayTotalCalories;
+                    console.log(`[loadWorkoutPlan] Calculated total calories for day ${dayIndex} (${day}): ${dayTotalCalories}`);
+                }
+            } else if (!Array.isArray(planData[day])) {
+                console.warn(`[loadWorkoutPlan] Data for day '${day}' is not an array:`, planData[day]);
+            } else {
+                 console.warn(`[loadWorkoutPlan] Could not find slot DOM element for day: ${lowerCaseDay}`);
+            }
+        }
+
+        // Update chart with the accumulated data
+        if (window.calorieChart) {
+             window.calorieChart.data.datasets[0].data = chartData;
+            console.log(`[loadWorkoutPlan] Final chart data before update:`, JSON.stringify(chartData));
+            window.calorieChart.update();
+            console.log("[loadWorkoutPlan] Chart updated successfully after loading plan");
+        } else {
+            console.error("[loadWorkoutPlan] Chart instance does not exist after data population");
+        }
+
+    } catch (error) {
+        console.error("Error loading workout plan:", error);
+        if (!window.calorieChart) {
+             initializeCalorieChart();
         }
     }
 }
 
-// Update calorie chart
-function updateCalorieChart(dayIndex, calories) {
-    const chart = window.calorieChart;
-    chart.data.datasets[0].data[dayIndex] += calories;
-    chart.update();
+// Modified saveWorkoutPlan to ensure correct data is sent
+async function saveWorkoutPlan() {
+    console.log("[saveWorkoutPlan] Attempting to save workout plan...");
+    const workoutPlan = {};
+    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+
+    days.forEach(day => {
+        // Corrected selector: Find the .workout-slot within the .day-column div with id=day
+        // Note: The HTML structure is actually <div class="day-column"> Monday <div class="workout-slot" data-day="monday">...</div> </div>
+        // So we need to select based on the data-day attribute of the slot itself.
+        const workoutSlotElement = document.querySelector(`.workout-slot[data-day="${day}"]`);
+
+
+        if (!workoutSlotElement) {
+            console.warn(`[saveWorkoutPlan] Workout slot element for day '${day}' not found.`);
+            return; // Skip if the slot doesn't exist
+        }
+        const exercises = [];
+        // Find exercises *within* the correct workout slot
+        workoutSlotElement.querySelectorAll(`.workout-exercise`).forEach(exerciseElement => {
+            const nameElement = exerciseElement.querySelector('.exercise-name'); // Selects <h4>
+
+            // Read data directly from the dataset attributes of the exerciseElement
+            const caloriesPerSet = exerciseElement.dataset.caloriesPerSet ? parseInt(exerciseElement.dataset.caloriesPerSet, 10) : 0;
+            const sets = exerciseElement.dataset.sets ? parseInt(exerciseElement.dataset.sets, 10) : 0;
+            const reps = exerciseElement.dataset.reps ? parseInt(exerciseElement.dataset.reps, 10) : 0;
+
+
+            if (nameElement && nameElement.textContent.trim()) {
+                 const name = nameElement.textContent.trim();
+
+                 // Basic validation for numeric values (already parsed or defaulted to 0)
+                 if (Number.isNaN(caloriesPerSet) || Number.isNaN(sets) || Number.isNaN(reps)) {
+                     console.warn(`[saveWorkoutPlan] Invalid numeric data found for ${name} on ${day}. Skipping.`);
+                     return; // Skip this exercise if data is invalid
+                 }
+
+                 // Push data using the correct field names expected by backend ('calories' for calories_per_set)
+                 exercises.push({
+                     name: name,
+                     calories: caloriesPerSet, // Map dataset.caloriesPerSet to 'calories' field for backend
+                     sets: sets,
+                     reps: reps
+                 });
+                 console.log(`[saveWorkoutPlan] Extracted for ${day}: Name=${name}, CaloriesPerSet=${caloriesPerSet}, Sets=${sets}, Reps=${reps}`);
+             } else {
+                console.warn(`[saveWorkoutPlan] Could not find name or data attributes on element:`, exerciseElement);
+            }
+        });
+        if (exercises.length > 0) {
+            workoutPlan[day] = exercises;
+        }
+    });
+
+    console.log("[saveWorkoutPlan] Compiled workout plan data:", JSON.stringify(workoutPlan, null, 2));
+
+    // Check if workoutPlan is empty before proceeding
+    if (Object.keys(workoutPlan).length === 0) {
+         console.log("[saveWorkoutPlan] No exercises found in any day slots. Sending request to clear plan.");
+         // Allow sending an empty object if the intention is to clear the plan
+    }
+
+
+    // Get CSRF token from meta tag
+    const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
+    const csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : null;
+    console.log("[saveWorkoutPlan] CSRF Token:", csrfToken); // Log the token
+
+    if (!csrfToken) {
+        console.error("[saveWorkoutPlan] CSRF token not found in meta tag!");
+        alert("Error: CSRF token missing. Please refresh the page."); // Inform user
+        return; // Stop if token is missing
+    }
+
+    try {
+        const response = await fetch('/api/workout_plan', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                // Add CSRF token header
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify(workoutPlan) // Send the potentially empty workoutPlan object
+        });
+
+        // Log raw response text for debugging non-JSON errors (like the HTML error page)
+         const responseText = await response.text();
+         console.log("[saveWorkoutPlan] Raw server response:", responseText);
+
+
+        if (!response.ok) {
+             // Try parsing as JSON, but fall back to text if it fails
+            let errorData;
+            try {
+                errorData = JSON.parse(responseText); // Try parsing the text as JSON
+            } catch (e) {
+                 // If parsing failed, use the raw text in the details
+                 errorData = { error: `Server returned non-JSON error (Status: ${response.status})`, details: responseText };
+            }
+             console.error('[saveWorkoutPlan] Server responded with error:', response.status, errorData);
+             // Display a more user-friendly error if possible
+             const errorMessage = errorData.error || `HTTP error! status: ${response.status}`;
+             // Check if details exist and are not empty before appending
+             const errorDetails = errorData.details && errorData.details.trim() ? `- ${errorData.details}` : '(No further details)';
+             // Throw the error to be caught by the calling function or the catch block below
+             throw new Error(`Error saving workout plan: ${errorMessage} ${errorDetails}`);
+        }
+
+         // If response is OK, parse the JSON response
+        const result = JSON.parse(responseText);
+         console.log('[saveWorkoutPlan] Workout plan saved successfully:', result);
+
+         // Reload the plan ONLY if the save was successful
+         await loadWorkoutPlan(); // Reload plan to reflect changes and update chart
+
+
+    } catch (error) {
+        // Log the error caught from the fetch operation or thrown due to !response.ok
+        console.error('[saveWorkoutPlan] Error during fetch operation:', error);
+        // Display error to user
+        alert(`Failed to save workout plan: ${error.message}`); // Provide feedback to user
+    }
 } 
