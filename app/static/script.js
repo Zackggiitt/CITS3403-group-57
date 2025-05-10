@@ -33,15 +33,13 @@ const signupBtn = document.querySelector('.signup-btn');
 
 if (loginBtn) {
     loginBtn.addEventListener('click', function () {
-        // Here you would typically show a login modal
-        alert('Login functionality will be implemented soon!');
+        window.location.href = "/login";
     });
 }
 
 if (signupBtn) {
     signupBtn.addEventListener('click', function () {
-        // Here you would typically show a signup modal
-        alert('Signup functionality will be implemented soon!');
+        window.location.href = "/signup";
     });
 }
 
