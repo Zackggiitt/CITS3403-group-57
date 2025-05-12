@@ -1,60 +1,91 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <nav class="navbar">
-        <div class="logo">FitPal</div>
-        <div class="nav-links">
-            <a href="{{ url_for('index') }}">Home</a>
-            <a href="{{ url_for('index') }}#features">Features</a>
-            <a href="{{ url_for('workout_tools') }}">Tools</a>
-            <a href="{{ url_for('posts') }}" class="active">Posts</a>
-            <a href="{{ url_for('index') }}#about">About</a>
-            <a href="{{ url_for('index') }}#contact">Contact</a>
-        </div>
-    </nav>
+    {# Removed duplicate navbar from signup.html as it should be in base.html #}
 
     <div class="signup-container">
-        <form method="POST" class="signup-form">
-            {% if error %}
+        <form method="POST" class="signup-form" novalidate>
+            {# Remove the manual error display, rely on field-specific errors #}
+            {# {% if error %}
                 <div class="error-message">{{ error }}</div>
-            {% endif %}
+            {% endif %} #}
 
             {{ form.hidden_tag() }}
             <h2>Create Your Account</h2>
 
+            {# --- First Name Field with Error Display --- #}
             <div class="form-group">
                 {{ form.first_name.label }}
-                {{ form.first_name(class="form-control", placeholder="Enter Your First Name") }}
+                {{ form.first_name(class="form-control" + (" is-invalid" if form.first_name.errors else ""), placeholder="Enter Your First Name") }}
+                {% if form.first_name.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.first_name.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
             </div>
 
+            {# --- Last Name Field with Error Display --- #}
             <div class="form-group">
                 {{ form.last_name.label }}
-                {{ form.last_name(class="form-control", placeholder="Enter Your Last Name") }}
+                {{ form.last_name(class="form-control" + (" is-invalid" if form.last_name.errors else ""), placeholder="Enter Your Last Name") }}
+                 {% if form.last_name.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.last_name.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
             </div>
 
+            {# --- Email Field with Error Display --- #}
             <div class="form-group">
                 {{ form.email.label }}
                 <div class="input-container">
                     <i class="fas fa-envelope icon"></i>
-                    {{ form.email(class="form-control", placeholder="Enter Your Email") }}
+                    {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""), placeholder="Enter Your Email") }}
                 </div>
+                 {% if form.email.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.email.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
             </div>
 
+            {# --- Password Field with Error Display --- #}
             <div class="form-group">
                 {{ form.password.label }}
                 <div class="input-container">
                     <i class="fas fa-lock icon"></i>
-                    {{ form.password(class="form-control", placeholder="Enter Your Password") }}
+                    {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""), placeholder="Enter Your Password") }}
                     <i class="fas fa-eye toggle-password" onclick="togglePasswordVisibility()"></i>
                 </div>
+                 {% if form.password.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.password.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
             </div>
 
+            {# --- Confirm Password Field with Error Display --- #}
             <div class="form-group">
                 {{ form.confirm_password.label }}
                 <div class="input-container">
                     <i class="fas fa-lock icon"></i>
-                    {{ form.confirm_password(class="form-control", placeholder="Confirm Password") }}
+                    {{ form.confirm_password(class="form-control" + (" is-invalid" if form.confirm_password.errors else ""), placeholder="Confirm Password") }}
                 </div>
+                 {% if form.confirm_password.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.confirm_password.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
             </div>
 
             {{ form.submit(class="submit-btn") }}

@@ -38,8 +38,26 @@
         </div>
     </nav>
 
-    {% block content %}
-    {% endblock %}
+    {# --- Flash Message Display --- #}
+    <div class="flash-messages-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category if category else 'info' }}">
+                        {{ message }}
+                        {# Optional: Add a close button #}
+                        {# <button type="button" class="close-alert" onclick="this.parentElement.style.display='none'">&times;</button> #}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    {# --- Main Content Block --- #}
+    <div class="main-content">
+        {% block content %}
+        {% endblock %}
+    </div>
 
     <footer>
         <div class="footer-content">
@@ -69,6 +87,10 @@
     </footer>
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script>
+        // Provide CSRF token for AJAX requests if CSRF protection is enabled
+        var csrfToken = "{{ csrf_token() if csrf_token else '' }}";
+    </script>
     {% block scripts %}
     {% endblock %}
 </body>

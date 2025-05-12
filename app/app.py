@@ -1,12 +1,18 @@
-from flask import Flask, render_template, url_for, redirect, request, jsonify, current_app # Import request and jsonify
+from flask import Flask, render_template, url_for, redirect, request, jsonify, current_app, flash # Import flash
 from flask_wtf.csrf import CSRFProtect
 from werkzeug.security import generate_password_hash, check_password_hash
 from .forms import SignupForm, LoginForm
 from config import Config # Import configuration
 from flask_sqlalchemy import SQLAlchemy # Import SQLAlchemy
 from flask_migrate import Migrate # Import Migrate
+# --- Flask-Login Imports ---
+from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user 
+
 import os
 from dotenv import load_dotenv
+from sqlalchemy import desc # Added for ordering
+from sqlalchemy.sql import func
+import json
 
 # Load environment variables from .env file
 load_dotenv()
@@ -32,8 +38,23 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
+# --- Flask-Login Setup ---
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login' # Specifies the route Flask-Login redirects to when login is required
+login_manager.login_message = "Please log in to access this page." # Optional: Custom message
+login_manager.login_message_category = "info" # Optional: Flash message category
+
 # Import database models (must be after db initialization)
 from app import models
+from app.models import User # Explicitly import User model for clarity
+
+# --- User Loader Callback ---
+# This callback is used to reload the user object from the user ID stored in the session
+@login_manager.user_loader
+def load_user(user_id):
+    # Since user_id is just the primary key of our user table, use it directly
+    return User.query.get(int(user_id))
 
 # Define route for the home page
 @app.route("/")
@@ -54,9 +75,13 @@ def login():
         user = User.query.filter_by(email=email).first()
         
         # Verify hashed password
-        if user and check_password_hash(user.password, password):
-            # TODO: Set up Flask-Login here for session management
-            return redirect(url_for("profile"))
+        if user and check_password_hash(user.password_hash, password): # Corrected: user.password -> user.password_hash
+            # --- Use Flask-Login's login_user ---
+            login_user(user) # Log the user in
+            flash('Logged in successfully.') # Optional: Flash message
+            # Redirect to the page user tried to access before login, or profile if none
+            next_page = request.args.get('next')
+            return redirect(next_page or url_for("profile"))
         else:
             error = "Invalid email or password."
     
@@ -85,7 +110,8 @@ def signup():
             first_name=form.first_name.data,
             last_name=form.last_name.data,
             email=email,
-            password=hashed_password
+            # Corrected: Use the correct column name 'password_hash' from your schema
+            password_hash=hashed_password
         )
 
         db.session.add(new_user)
@@ -98,16 +124,101 @@ def signup():
 
 # Define route for the posts page
 @app.route("/posts")
+@login_required # Add decorator to require login for this page
 def posts():
-    return render_template("posts.html", title="Posts")
+    # --- Get current user's workout plan ---
+    # Remove mock_user_id
+    my_plans_query = models.WorkoutPlan.query.filter_by(user_id=current_user.id) # Use current_user.id
+    my_plan_entries = my_plans_query.all()
+    my_plans_by_day = {day: [] for day in ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]}
+    for entry in my_plan_entries:
+        if entry.day_of_week in my_plans_by_day:
+            my_plans_by_day[entry.day_of_week].append(entry.to_dict())
+    
+    ordered_days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+    ordered_my_plans_by_day = {day: my_plans_by_day.get(day, []) for day in ordered_days}
+
+    # --- Get plans shared with the current user ---
+    # Remove mock_recipient_identifier
+
+    # 1. Subquery to find the latest shared_at for each sharer to the current user
+    latest_shared_times_subq = db.session.query(
+        models.SharedPlan.sharer_id,
+        func.max(models.SharedPlan.shared_at).label('latest_shared_at')
+    ).filter(
+        models.SharedPlan.recipient_id == current_user.id # Use recipient_id and current_user.id
+    ).group_by(
+        models.SharedPlan.sharer_id
+    ).subquery('latest_shared_times_subq')
+
+    # 2. Query to get the actual SharedPlan records corresponding to these latest times
+    latest_share_records_for_recipient = db.session.query(models.SharedPlan).join(
+        latest_shared_times_subq,
+        (models.SharedPlan.sharer_id == latest_shared_times_subq.c.sharer_id) &
+        (models.SharedPlan.shared_at == latest_shared_times_subq.c.latest_shared_at)
+    ).filter( 
+        models.SharedPlan.recipient_id == current_user.id # Filter again for safety/clarity
+    ).order_by(models.SharedPlan.sharer_id).all() 
+
+    sharers_for_dropdown = []
+    latest_plans_data_for_js = {}
+
+    for share_record in latest_share_records_for_recipient:
+        # Access the sharer User object via the relationship
+        sharer_user = share_record.sharer 
+        if not sharer_user: # Check if sharer exists (should always exist due to FK)
+            continue 
+        
+        sharer_id = sharer_user.id
+        sharer_display_name = f"{sharer_user.first_name} {sharer_user.last_name}" # Get sharer's name
+
+        sharers_for_dropdown.append({
+            'id': sharer_id,
+            'display_text': f"Plan from {sharer_display_name}" # Use sharer's name
+        })
+
+        # Fetch workout entries for this specific sharer
+        sharer_workout_entries = models.WorkoutPlan.query.filter_by(user_id=sharer_id).all()
+        
+        sharer_plans_by_day = {day: [] for day in ordered_days}
+        has_plan_entries = False
+        for entry in sharer_workout_entries:
+            day_key = entry.day_of_week.lower()
+            if day_key in sharer_plans_by_day:
+                sharer_plans_by_day[day_key].append(entry.to_dict())
+                has_plan_entries = True
+        
+        ordered_sharer_plans = {day: sharer_plans_by_day.get(day, []) for day in ordered_days}
+
+        latest_plans_data_for_js[str(sharer_id)] = {
+            'sharer_id': sharer_id,
+            'sharer_name': sharer_display_name, # Add sharer name to JS data
+            'shared_at': share_record.shared_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'recipient_id': share_record.recipient_id, # Now using recipient_id
+            'plan_details': ordered_sharer_plans,
+            'plan_exists': has_plan_entries
+        }
+        
+    return render_template(
+        "posts.html", 
+        title="My Workout Week & Shared Plans", 
+        my_plans_data=ordered_my_plans_by_day, 
+        # Remove mock_user_id and mock_recipient_identifier from template context
+        sharers_for_dropdown=sharers_for_dropdown,
+        latest_plans_data_json=json.dumps(latest_plans_data_for_js) # Serialize to JSON string
+    )
 
 # Define route for the user profile page
 @app.route("/profile")
+@login_required # Add decorator to require login for this page
 def profile():
+    # You can now access the logged-in user via current_user
+    # Example: return render_template("profile.html", title="Profile", user=current_user)
     return render_template("profile.html", title="Profile")
 
 # Define route for the workout tools page
 @app.route("/tools")
+@login_required # Add decorator to require login for this page
 def workout_tools():
     return render_template("workout_tools.html", title="Tools")
 
@@ -140,6 +251,7 @@ def get_workout_plan():
         return jsonify({"error": "Failed to retrieve workout plan"}), 500
 
 @app.route("/api/workout_plan", methods=['POST'])
+@login_required # Secure this API endpoint
 def save_workout_plan():
     """Saves the workout plan received from the frontend."""
     try:
@@ -178,11 +290,12 @@ def save_workout_plan():
                              current_app.logger.warning(f"Skipping exercise due to invalid numeric value for day {day}: {exercise} - Error: {ve}")
                              continue # Skip if conversion fails
 
-                        # Create new entry using correct model field names
+                        # Create new entry using validated data
                         new_entry = models.WorkoutPlan(
-                            day_of_week=day.lower(),
+                            user_id=current_user.id, # Use current_user.id instead of hardcoded/mock ID
+                            day_of_week=day.lower(), # Normalize day name
                             exercise_name=name,
-                            calories=calories_per_set, # Map to the 'calories' field in model
+                            calories_per_set=calories_per_set,
                             sets=sets,
                             reps=reps
                         )
@@ -212,6 +325,75 @@ def save_workout_plan():
         import traceback
         traceback.print_exc() # Print detailed traceback to server logs
         return jsonify({"error": "Failed to save workout plan", "details": str(e)}), 500
+    
+@app.route("/api/share_plan", methods=['POST'])
+@login_required 
+def share_plan(): # Renamed function
+    """
+    Endpoint to handle sharing the current user's workout plan with another user.
+    Accepts the recipient user's email address.
+    Saves the share record to SharedPlan table.
+    """
+    if not request.is_json:
+        current_app.logger.error("Request to /api/share_plan was not JSON")
+        return jsonify({"error": "Request must be JSON"}), 400
+
+    data = request.get_json()
+    current_app.logger.info(f"Received data for /api/share_plan: {data}")
+
+    recipient_email = data.get('recipientEmail') # Expect recipient email
+
+    if not recipient_email:
+        current_app.logger.error("Missing recipientEmail in /api/share_plan request")
+        return jsonify({"error": "Missing recipientEmail in request body"}), 400
+
+    # Find the recipient user by email
+    recipient_user = User.query.filter_by(email=recipient_email).first()
+
+    if not recipient_user:
+        current_app.logger.warning(f"Recipient user not found: {recipient_email}")
+        return jsonify({"error": f"User with email '{recipient_email}' not found."}), 404 # Not Found
+
+    # Prevent users from sharing with themselves
+    if recipient_user.id == current_user.id:
+        current_app.logger.warning(f"User {current_user.id} tried to share plan with themselves.")
+        return jsonify({"error": "You cannot share a plan with yourself."}), 400
+        
+    # Check if this exact share (sharer to recipient) already exists to prevent duplicates
+    # Note: We might allow re-sharing to update the timestamp, depending on requirements.
+    # For now, let's prevent exact duplicates if needed, or just allow re-sharing.
+    # Allowing re-sharing (which updates the timestamp) is simpler for now.
+
+    try:
+        # Create the share record using current_user and recipient_user IDs
+        new_share = models.SharedPlan(
+            sharer_id=current_user.id, 
+            recipient_id=recipient_user.id
+            # shared_at will be set by default by the model
+        )
+        db.session.add(new_share)
+        db.session.commit()
+        
+        current_app.logger.info(f"New share record created: ID={new_share.id}, Sharer={current_user.id}, Recipient={recipient_user.id}")
+        
+        # Include recipient details in the response for clarity
+        return jsonify({
+            "message": f"Plan shared successfully with {recipient_user.email}.",
+            "share_details": new_share.to_dict() 
+        }), 201
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error creating share record from {current_user.id} to {recipient_email} (ID: {recipient_user.id if recipient_user else 'N/A'}): {e}")
+        return jsonify({"error": "Failed to create share record in database.", "details": str(e)}), 500
+
+# --- Logout Route ---
+@app.route("/logout")
+@login_required # Ensure user is logged in to log out
+def logout():
+    logout_user() # Log the user out
+    flash("You have been logged out.")
+    return redirect(url_for('login')) # Redirect to login page after logout
 
 # Run the application in debug mode if this file is executed directly
 if __name__ == "__main__":

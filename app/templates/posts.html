@@ -1,60 +1,242 @@
 {% extends "base.html" %}
 
+{% block head %}
+    {{ super() }} 
+{% endblock %}
+
 {% block content %}
-    <!-- Posts Header -->
+    <!-- "My Workout Week" Section -->
     <header class="posts-header">
-        <h1>Community Posts</h1>
-        <p>Coming Soon</p>
+        <h1>My Workout Week</h1>
+        {# Replace mock_user_id with current_user if available and relevant #}
+        {% if current_user and current_user.is_authenticated %}
+            <p>Your weekly workout schedule. You can share this plan with another user.</p>
+        {% else %}
+            <p>Your weekly workout schedule. Login to share.</p>
+        {% endif %}
     </header>
 
-    <!-- Posts Section -->
-    <section class="posts-container">
-        <!-- Post Actions: Button to trigger modal -->
-        <div class="posts-actions">
-            <button class="create-post-btn" id="createPostBtn"><i class="fas fa-plus"></i> Create New Post</button>
-            <!-- Filter might be added back later if needed -->
-        </div>
+    <section class="workout-plan-container">
+        {% if my_plans_data %}
+            {% for day, exercises in my_plans_data.items() %}
+                <div class="day-plan">
+                    <h2>{{ day | capitalize }}</h2>
+                    {% if exercises %}
+                        <ul>
+                            {% for exercise in exercises %}
+                                <li>
+                                    <strong>{{ exercise.name }}</strong> - {{ exercise.sets }} sets x {{ exercise.reps }} reps
+                                    (Calories: {{ exercise.calories }})
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p>Rest day or no plans for today.</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
 
-        <!-- Post Placeholder -->
-        <div class="post-placeholder">
-            <p>This page is under development</p>
-            <!-- Icon can be added here if desired -->
-        </div>
+            <div class="share-plan-action" style="margin-top: 20px; text-align: center;">
+                <button class="share-plan-btn" id="sharePlanBtn"><i class="fas fa-share-square"></i> Share This Week's Plan</button>
+            </div>
+        {% else %}
+            <div class="post-placeholder">
+                 {% if current_user and current_user.is_authenticated %}
+                    <p>No workout plan found for you yet. Go to "Workout Tools" to create one!</p>
+                 {% else %}
+                    <p>No workout plan found.</p>
+                 {% endif %}
+            </div>
+        {% endif %}
     </section>
 
-    <!-- Create Post Modal -->
-    <div id="createPostModal" class="modal">
+    <hr style="margin: 40px 0;"> <!-- Visual separator -->
+
+    <!-- "Plans Shared With Me" Section -->
+    <header class="posts-header">
+        <h1>Plans Shared With Me</h1>
+        {% if current_user and current_user.is_authenticated %}
+            <p>Workout plans shared with you ({{ current_user.email }}).</p>
+        {% else %}
+            <p>Login to see plans shared with you.</p>
+        {% endif %}
+    </header>
+
+    <section class="shared-plans-container workout-plan-container">
+        {% if sharers_for_dropdown %}
+            <div class="shared-plan-selector" style="margin-bottom: 20px;">
+                <label for="sharerDropdown" style="margin-right: 10px;">Select a Sharer:</label>
+                <select id="sharerDropdown" name="sharerDropdown">
+                    <option value="">-- Select a Plan --</option>
+                    {% for sharer in sharers_for_dropdown %}
+                        <option value="{{ sharer.id }}">{{ sharer.display_text }}</option>
+                    {% endfor %}
+                </select>
+        </div>
+
+            <div id="selectedSharedPlanDisplay" class="selected-plan-display-area" style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; min-height: 100px; background-color: #fdfdfd;">
+                <!-- Selected plan will be rendered here by JavaScript -->
+                <p style="color: #757575; text-align: center;">Please select a plan from the dropdown above to view details.</p>
+            </div>
+        {% else %}
+        <div class="post-placeholder">
+            {% if current_user and current_user.is_authenticated %}
+                <p>No workout plans have been shared with you ({{ current_user.email }}) yet.</p>
+            {% else %}
+                <p>No workout plans have been shared with you yet.</p>
+            {% endif %}
+        </div>
+        {% endif %}
+    </section>
+
+    <!-- Share Plan Modal -->
+    <div id="sharePlanModal" class="modal" style="display: none;"> <!-- Hidden by default -->
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Create New Post</h2>
-                <button class="close-btn" id="closeModalBtn">&times;</button>
+                <h2>Share Workout Plan</h2>
+                <button class="close-btn" id="closeShareModalBtn">&times;</button>
             </div>
             <div class="modal-body">
-                <form id="createPostForm">
+                <form id="sharePlanForm">
+                    {% if current_user and current_user.is_authenticated %}
+                        <p>You are about to share your current week's plan.</p>
+                    {% endif %}
                     <div class="form-group">
-                        <label for="postTitle">Title</label>
-                        <input type="text" id="postTitle" name="postTitle" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="postCategory">Category</label>
-                        <select id="postCategory" name="postCategory">
-                            <option value="workout">Workout Tips</option>
-                            <option value="nutrition">Nutrition</option>
-                            <option value="story">Success Stories</option>
-                            <option value="general">General Discussion</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="postContent">Content</label>
-                        <textarea id="postContent" name="postContent" rows="6" required></textarea>
+                        <label for="recipientEmailInput">Share with (Enter Recipient's Email):</label>
+                        <input type="email" id="recipientEmailInput" name="recipientEmail" placeholder="e.g., user@example.com" required style="width: 90%; padding: 8px; margin-top: 5px;">
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="submit" form="createPostForm" class="submit-btn">Post</button>
-                <button type="button" class="cancel-btn" id="cancelModalBtn">Cancel</button>
+                <button type="submit" form="sharePlanForm" class="submit-btn" id="submitShareBtn">Confirm Share</button>
+                <button type="button" class="cancel-btn" id="cancelShareModalBtn">Cancel</button>
             </div>
         </div>
     </div>
-    <!-- End Create Post Modal -->
+
+    <script>
+        // Basic Modal Functionality (can be moved to a global JS file later)
+        const sharePlanBtn = document.getElementById('sharePlanBtn');
+        const sharePlanModal = document.getElementById('sharePlanModal');
+        const closeShareModalBtn = document.getElementById('closeShareModalBtn');
+        const cancelShareModalBtn = document.getElementById('cancelShareModalBtn');
+        const sharePlanForm = document.getElementById('sharePlanForm');
+        const submitShareBtn = document.getElementById('submitShareBtn');
+
+        if (sharePlanBtn) {
+            sharePlanBtn.onclick = function() {
+                sharePlanModal.style.display = 'block';
+            }
+        }
+
+        if (closeShareModalBtn) {
+            closeShareModalBtn.onclick = function() {
+                sharePlanModal.style.display = 'none';
+            }
+        }
+        
+        if (cancelShareModalBtn) {
+            cancelShareModalBtn.onclick = function() {
+                sharePlanModal.style.display = 'none';
+            }
+        }
+
+        window.onclick = function(event) {
+            if (event.target == sharePlanModal) {
+                sharePlanModal.style.display = 'none';
+            }
+        }
+
+        if (sharePlanForm) {
+            sharePlanForm.addEventListener('submit', async function(event) {
+                event.preventDefault(); // Prevent default form submission
+                const recipientEmailValue = document.getElementById('recipientEmailInput').value;
+
+                if (!recipientEmailValue) {
+                    alert('Please enter a recipient email address.');
+                    return;
+                }
+                
+                console.log('Attempting to share plan to recipientEmail:', recipientEmailValue);
+
+                try {
+                    const response = await fetch('/api/share_plan', { // Updated API endpoint
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrfToken // Global csrfToken variable
+                        },
+                        body: JSON.stringify({
+                            recipientEmail: recipientEmailValue // Send recipientEmail
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        console.log('Share API call successful:', result);
+                        alert(result.message || 'Plan shared successfully!');
+                    } else {
+                        console.error('Share API call failed:', result);
+                        alert('Failed to share plan: ' + (result.error || 'Unknown error: ' + response.status));
+                    }
+                } catch (error) {
+                    console.error('Error during share API call:', error);
+                    alert('An error occurred while trying to share the plan. Please check the console for details.');
+                }
+                
+                sharePlanModal.style.display = 'none';
+                document.getElementById('recipientEmailInput').value = ''; // Clear input field
+            });
+        }
+
+        // --- JavaScript for Shared Plan Dropdown --- 
+        const sharerDropdown = document.getElementById('sharerDropdown');
+        const selectedSharedPlanDisplay = document.getElementById('selectedSharedPlanDisplay');
+        const allLatestPlansData = JSON.parse('{{ latest_plans_data_json | safe }}'); 
+
+        if (sharerDropdown) {
+            sharerDropdown.addEventListener('change', function() {
+                const selectedSharerId = this.value;
+                selectedSharedPlanDisplay.innerHTML = ''; // Clear previous content
+
+                if (selectedSharerId && allLatestPlansData[selectedSharerId]) {
+                    const planData = allLatestPlansData[selectedSharerId];
+                    
+                    // Use sharer_name if available from backend, otherwise fallback to User ID
+                    let sharerDisplayName = planData.sharer_name || `User ${planData.sharer_id}`;
+                    let content = `<h4>Plan from ${sharerDisplayName}</h4>`;
+                    content += `<p><small>Shared on: ${planData.shared_at}</small></p>`;
+
+                    if (planData.plan_exists) {
+                        for (const day in planData.plan_details) {
+                            const exercises = planData.plan_details[day];
+                            content += `<div class="day-plan" style="background-color: #f9f9f9; margin-top:15px; padding:10px; border-radius: 5px;">
+                                            <h5>${day.charAt(0).toUpperCase() + day.slice(1)}</h5>`;
+                            if (exercises && exercises.length > 0) {
+                                content += '<ul>';
+                                exercises.forEach(exercise => {
+                                    content += `<li>
+                                                    <strong>${exercise.name}</strong> - ${exercise.sets} sets x ${exercise.reps} reps
+                                                    (Calories: ${exercise.calories})
+                                                </li>`;
+                                });
+                                content += '</ul>';
+                            } else {
+                                content += '<p>Rest day or no plans for today.</p>';
+                            }
+                            content += '</div>';
+                        }
+                    } else {
+                        content += `<p style="margin-top: 15px; font-style: italic;">The sharer (${sharerDisplayName}) currently has no workout plan configured.</p>`;
+                    }
+                    selectedSharedPlanDisplay.innerHTML = content;
+                } else if (selectedSharerId === "") {
+                    selectedSharedPlanDisplay.innerHTML = '<p style="color: #757575; text-align: center;">Please select a plan from the dropdown above to view details.</p>';
+                } else {
+                    selectedSharedPlanDisplay.innerHTML = '<p style="color: #dc3545; text-align: center;">Could not find plan details for the selected sharer.</p>';
+                }
+            });
+        }
+    </script>
 {% endblock %}
