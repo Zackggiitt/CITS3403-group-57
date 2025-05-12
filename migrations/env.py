@@ -5,14 +5,18 @@ from flask import current_app
 
 from alembic import context
 
-# this is the Alembic Config object, which provides
-# access to the values within the .ini file in use.
+# --- Get Alembic config object ---
 config = context.config
 
-# Interpret the config file for Python logging.
-# This line sets up loggers basically.
-fileConfig(config.config_file_name)
+
+if config.config_file_name is not None:
+    fileConfig(config.config_file_name)
 logger = logging.getLogger('alembic.env')
+
+# --- Add import for your app's db instance and models --- 
+# Adjust the import path based on your project structure
+from app.app import db 
+
 
 
 def get_engine():
@@ -38,6 +42,9 @@ def get_engine_url():
 # target_metadata = mymodel.Base.metadata
 config.set_main_option('sqlalchemy.url', get_engine_url())
 target_db = current_app.extensions['migrate'].db
+
+# --- Set the target_metadata for autogenerate --- 
+target_metadata = db.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
@@ -65,7 +72,10 @@ def run_migrations_offline():
     """
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
-        url=url, target_metadata=get_metadata(), literal_binds=True
+        url=url,
+        # Use the target_metadata defined above
+        target_metadata=target_metadata, 
+        literal_binds=True
     )
 
     with context.begin_transaction():
@@ -99,7 +109,8 @@ def run_migrations_online():
     with connectable.connect() as connection:
         context.configure(
             connection=connection,
-            target_metadata=get_metadata(),
+            # Use the target_metadata defined above
+            target_metadata=target_metadata,
             **conf_args
         )
 

@@ -388,6 +388,80 @@ body {
     text-decoration: underline;
 }
 
+/* --- Form Error and Flash Message Styles --- */
+
+/* Style for the error message container below fields */
+.invalid-feedback {
+    color: #dc3545; /* Red color for errors */
+    font-size: 0.875em; /* Slightly smaller font size */
+    margin-top: 0.25rem; /* Space above the error message */
+    display: block; /* Ensure it takes up its own line */
+}
+
+/* Style for input fields that have errors */
+.form-control.is-invalid {
+    border-color: #dc3545 !important; /* Red border, !important to override specificity if needed */
+    /* You might want to add a background image for an error icon */
+    /* background-image: url("data:image/svg+xml,..."); */
+    /* background-repeat: no-repeat; */
+    /* background-position: right calc(.375em + .1875rem) center; */
+    /* background-size: calc(.75em + .375rem) calc(.75em + .375rem); */
+}
+
+/* General styling for flash message alerts */
+.alert {
+    padding: 1rem;
+    margin: 1rem 5%; /* Add margin top/bottom and horizontal padding */
+    border: 1px solid transparent;
+    border-radius: 0.25rem;
+    position: relative; /* Useful if adding a close button */
+}
+
+/* Specific alert styles based on category */
+.alert-success {
+    color: #0f5132; /* Dark green text */
+    background-color: #d1e7dd; /* Light green background */
+    border-color: #badbcc; /* Green border */
+}
+
+.alert-danger, .alert-error {
+    color: #842029; /* Dark red text */
+    background-color: #f8d7da; /* Light red background */
+    border-color: #f5c2c7; /* Red border */
+}
+
+.alert-warning {
+    color: #664d03; /* Dark yellow text */
+    background-color: #fff3cd; /* Light yellow background */
+    border-color: #ffecb5; /* Yellow border */
+}
+
+.alert-info {
+    color: #055160; /* Dark blue/cyan text */
+    background-color: #cff4fc; /* Light blue/cyan background */
+    border-color: #b6effb; /* Blue/cyan border */
+}
+
+/* Optional: Style for a close button within alerts */
+.close-alert {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.75rem;
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: inherit; /* Inherit color from parent alert */
+    background: none;
+    border: none;
+    opacity: 0.7;
+    cursor: pointer;
+}
+
+.close-alert:hover {
+    opacity: 1;
+}
+
+/* --- End Form Error and Flash Message Styles --- */
+
 @media screen and (max-width: 768px) {
     .signup-container {
         margin: 20px;

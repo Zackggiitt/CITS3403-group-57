@@ -8,7 +8,12 @@
     <!-- "My Workout Week" Section -->
     <header class="posts-header">
         <h1>My Workout Week</h1>
-        <p>Your weekly workout schedule (User ID: {{ mock_user_id }}). You can share this plan with another user.</p>
+        {# Replace mock_user_id with current_user if available and relevant #}
+        {% if current_user and current_user.is_authenticated %}
+            <p>Your weekly workout schedule. You can share this plan with another user.</p>
+        {% else %}
+            <p>Your weekly workout schedule. Login to share.</p>
+        {% endif %}
     </header>
 
     <section class="workout-plan-container">
@@ -36,7 +41,11 @@
             </div>
         {% else %}
             <div class="post-placeholder">
-                <p>No workout plan found for User ID: {{ mock_user_id }}.</p>
+                 {% if current_user and current_user.is_authenticated %}
+                    <p>No workout plan found for you yet. Go to "Workout Tools" to create one!</p>
+                 {% else %}
+                    <p>No workout plan found.</p>
+                 {% endif %}
             </div>
         {% endif %}
     </section>
@@ -46,7 +55,11 @@
     <!-- "Plans Shared With Me" Section -->
     <header class="posts-header">
         <h1>Plans Shared With Me</h1>
-        <p>Workout plans shared with recipient: <strong>{{ mock_recipient_identifier }}</strong></p>
+        {% if current_user and current_user.is_authenticated %}
+            <p>Workout plans shared with you ({{ current_user.email }}).</p>
+        {% else %}
+            <p>Login to see plans shared with you.</p>
+        {% endif %}
     </header>
 
     <section class="shared-plans-container workout-plan-container">
@@ -56,19 +69,23 @@
                 <select id="sharerDropdown" name="sharerDropdown">
                     <option value="">-- Select a Plan --</option>
                     {% for sharer in sharers_for_dropdown %}
-                        <option value="{{ sharer.id }}">{{ sharer.display_text }} (Latest)</option>
+                        <option value="{{ sharer.id }}">{{ sharer.display_text }}</option>
                     {% endfor %}
                 </select>
-            </div>
+        </div>
 
             <div id="selectedSharedPlanDisplay" class="selected-plan-display-area" style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; min-height: 100px; background-color: #fdfdfd;">
                 <!-- Selected plan will be rendered here by JavaScript -->
                 <p style="color: #757575; text-align: center;">Please select a plan from the dropdown above to view details.</p>
             </div>
         {% else %}
-            <div class="post-placeholder">
-                <p>No workout plans have been shared with {{ mock_recipient_identifier }} yet.</p>
-            </div>
+        <div class="post-placeholder">
+            {% if current_user and current_user.is_authenticated %}
+                <p>No workout plans have been shared with you ({{ current_user.email }}) yet.</p>
+            {% else %}
+                <p>No workout plans have been shared with you yet.</p>
+            {% endif %}
+        </div>
         {% endif %}
     </section>
 
@@ -81,10 +98,12 @@
             </div>
             <div class="modal-body">
                 <form id="sharePlanForm">
-                    <p>You are about to share the entire week's plan for User ID: {{ mock_user_id }}.</p>
+                    {% if current_user and current_user.is_authenticated %}
+                        <p>You are about to share your current week's plan.</p>
+                    {% endif %}
                     <div class="form-group">
-                        <label for="targetUser">Share with (Enter User ID or Email):</label>
-                        <input type="text" id="targetUser" name="targetUser" placeholder="e.g., user2 or user2@example.com" required style="width: 90%; padding: 8px; margin-top: 5px;">
+                        <label for="recipientEmailInput">Share with (Enter Recipient's Email):</label>
+                        <input type="email" id="recipientEmailInput" name="recipientEmail" placeholder="e.g., user@example.com" required style="width: 90%; padding: 8px; margin-top: 5px;">
                     </div>
                 </form>
             </div>
@@ -131,30 +150,24 @@
         if (sharePlanForm) {
             sharePlanForm.addEventListener('submit', async function(event) {
                 event.preventDefault(); // Prevent default form submission
-                const targetUser = document.getElementById('targetUser').value;
-                // Use tojson filter to ensure mock_user_id is correctly passed to JavaScript
-                const sharerUserId = {{ mock_user_id | tojson }};
-                console.log('Value of sharerUserId before fetch:', sharerUserId); // Added for debugging
-                console.log('Type of sharerUserId before fetch:', typeof sharerUserId); // Added for debugging
+                const recipientEmailValue = document.getElementById('recipientEmailInput').value;
 
-                if (!targetUser) {
-                    alert('Please enter a target user ID or email.');
+                if (!recipientEmailValue) {
+                    alert('Please enter a recipient email address.');
                     return;
                 }
                 
-                console.log('Attempting to share plan from sharerUserId:', sharerUserId, 'to targetUser:', targetUser);
+                console.log('Attempting to share plan to recipientEmail:', recipientEmailValue);
 
                 try {
-                    const response = await fetch('/api/mock_share_plan', {
+                    const response = await fetch('/api/share_plan', { // Updated API endpoint
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            // Use the global csrfToken variable defined in base.html
-                            'X-CSRFToken': csrfToken 
+                            'X-CSRFToken': csrfToken // Global csrfToken variable
                         },
                         body: JSON.stringify({
-                            targetUser: targetUser,
-                            sharerUserId: sharerUserId
+                            recipientEmail: recipientEmailValue // Send recipientEmail
                         })
                     });
 
@@ -162,7 +175,7 @@
 
                     if (response.ok) {
                         console.log('Share API call successful:', result);
-                        alert(result.message || 'Plan shared successfully (mock operation)!');
+                        alert(result.message || 'Plan shared successfully!');
                     } else {
                         console.error('Share API call failed:', result);
                         alert('Failed to share plan: ' + (result.error || 'Unknown error: ' + response.status));
@@ -173,15 +186,13 @@
                 }
                 
                 sharePlanModal.style.display = 'none';
-                document.getElementById('targetUser').value = '';
+                document.getElementById('recipientEmailInput').value = ''; // Clear input field
             });
         }
 
-        // --- New JavaScript for Shared Plan Dropdown --- 
+        // --- JavaScript for Shared Plan Dropdown --- 
         const sharerDropdown = document.getElementById('sharerDropdown');
         const selectedSharedPlanDisplay = document.getElementById('selectedSharedPlanDisplay');
-        // Parse the JSON data passed from Flask (ensure it's properly escaped if it contains HTML-like strings, though plan data shouldn't)
-        // The |safe filter is important here if the JSON string itself might be misinterpreted by Jinja
         const allLatestPlansData = JSON.parse('{{ latest_plans_data_json | safe }}'); 
 
         if (sharerDropdown) {
@@ -192,7 +203,9 @@
                 if (selectedSharerId && allLatestPlansData[selectedSharerId]) {
                     const planData = allLatestPlansData[selectedSharerId];
                     
-                    let content = `<h4>Plan from User ${planData.sharer_id}</h4>`;
+                    // Use sharer_name if available from backend, otherwise fallback to User ID
+                    let sharerDisplayName = planData.sharer_name || `User ${planData.sharer_id}`;
+                    let content = `<h4>Plan from ${sharerDisplayName}</h4>`;
                     content += `<p><small>Shared on: ${planData.shared_at}</small></p>`;
 
                     if (planData.plan_exists) {
@@ -215,7 +228,7 @@
                             content += '</div>';
                         }
                     } else {
-                        content += `<p style="margin-top: 15px; font-style: italic;">The sharer (User ID: ${planData.sharer_id}) currently has no workout plan configured.</p>`;
+                        content += `<p style="margin-top: 15px; font-style: italic;">The sharer (${sharerDisplayName}) currently has no workout plan configured.</p>`;
                     }
                     selectedSharedPlanDisplay.innerHTML = content;
                 } else if (selectedSharerId === "") {
