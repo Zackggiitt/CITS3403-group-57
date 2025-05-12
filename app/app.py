@@ -21,14 +21,10 @@ app = Flask(__name__,
             instance_relative_config=True,
             instance_path=Config.INSTANCE_FOLDER_PATH)
 
-# "FLASK_SECRET_KEY" is just a placeholder for now, ensure that it is set later
+# TODO: "FLASK_SECRET_KEY" is just a placeholder for now, ensure that it is set later
 app.secret_key = os.environ.get("FLASK_SECRET_KEY")
 
 csrf = CSRFProtect(app)
-
-# Temporary in-memory "database" to store user details (if we want to test)
-# TODO: Replace this with calls to actual database when it is set up
-users = {}
 
 # Load configuration from Config object
 # Use environment variable or default to 'config.Config'
@@ -52,19 +48,17 @@ def index():
 def login():
     form = LoginForm()
     error = None
+
     if form.validate_on_submit():
         email = form.email.data
         password = form.password.data
         
-        # Temporary: retrieve the user from the in-memory store
-        # TODO: Replace this with a database query to fetch the user by email
-        user = users.get(email)
+        # Query the database for the user
+        user = User.query.filter_by(email=email).first()
         
-        # Verify hashed password. In production, password is stored securely in your database
-        if user and check_password_hash(user["password"], password):
-            # User is authenticated
-            # TODO: Integrate Flask-Login here for real sessions, for now just print "Logging in"
-            print("Logging in:", email)
+        # Verify hashed password
+        if user and check_password_hash(user.password, password):
+            # TODO: Set up Flask-Login here for session management
             return redirect(url_for("profile"))
         else:
             error = "Invalid email or password."
@@ -76,27 +70,31 @@ def login():
 def signup():
     form = SignupForm()
     error = None
+
     if form.validate_on_submit():
         email = form.email.data
         
-        # Temporary: check if the user exists in the in-memory store
-        # TODO: Replace this with a database query to check for an existing user by email
-        if email in users:
+        # Check if the user already exists in the database
+        existing_user = User.query.filter_by(email=email).first()
+        if existing_user:
             error = "User already exists with that email."
             return render_template("signup.html", form=form, title="Sign Up", error=error)
         
         # Hash the password before storing it for security
         hashed_password = generate_password_hash(form.password.data)
         
-        # Temporary: store the new user in the in-memory "database"
-        # TODO: Replace this with a database INSERT operation
-        users[email] = {
-            "first_name": form.first_name.data,
-            "last_name": form.last_name.data,
-            "email": email,
-            "password": hashed_password,
-        }
-        print("New user registered:", email)
+        # Create a new user and add to the database
+        new_user = User(
+            first_name=form.first_name.data,
+            last_name=form.last_name.data,
+            email=email,
+            password=hashed_password
+        )
+
+        db.session.add(new_user)
+        db.session.commit()
+
+        flash("Account created successfully! Please log in.")
         return redirect(url_for("login"))
     
     return render_template("signup.html", form=form, title="Sign Up", error=error)
