@@ -1,2 +1,3 @@
     # .flaskenv
     FLASK_APP=app.app
+    FLASK_DEBUG=1

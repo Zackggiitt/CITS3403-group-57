@@ -7,6 +7,9 @@ from flask_sqlalchemy import SQLAlchemy # Import SQLAlchemy
 from flask_migrate import Migrate # Import Migrate
 import os
 from dotenv import load_dotenv
+from sqlalchemy import desc # Added for ordering
+from sqlalchemy.sql import func
+import json
 
 # Load environment variables from .env file
 load_dotenv()
@@ -101,7 +104,85 @@ def signup():
 # Define route for the posts page
 @app.route("/posts")
 def posts():
-    return render_template("posts.html", title="Posts")
+    mock_user_id = 1 
+    
+    my_plans_query = models.WorkoutPlan.query.filter_by(user_id=mock_user_id)
+    my_plan_entries = my_plans_query.all()
+    my_plans_by_day = {day: [] for day in ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]}
+    for entry in my_plan_entries:
+        if entry.day_of_week in my_plans_by_day:
+            my_plans_by_day[entry.day_of_week].append(entry.to_dict())
+    
+    ordered_days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+    ordered_my_plans_by_day = {day: my_plans_by_day.get(day, []) for day in ordered_days}
+
+    mock_recipient_identifier = "user2" # IMPORTANT: Change "user2" to an actual recipient_identifier in your SharedPlan table
+
+    # --- New logic for "Plans Shared With Me" ---
+    # 1. Subquery to find the latest shared_at for each sharer to the recipient
+    latest_shared_times_subq = db.session.query(
+        models.SharedPlan.sharer_id,
+        func.max(models.SharedPlan.shared_at).label('latest_shared_at')
+    ).filter(
+        models.SharedPlan.recipient_identifier == mock_recipient_identifier
+    ).group_by(
+        models.SharedPlan.sharer_id
+    ).subquery('latest_shared_times_subq')
+
+    # 2. Query to get the actual SharedPlan records corresponding to these latest times
+    latest_share_records_for_recipient = db.session.query(models.SharedPlan).join(
+        latest_shared_times_subq,
+        (models.SharedPlan.sharer_id == latest_shared_times_subq.c.sharer_id) &
+        (models.SharedPlan.shared_at == latest_shared_times_subq.c.latest_shared_at)
+    ).filter( # Ensure recipient match is still part of the main query for clarity/safety
+        models.SharedPlan.recipient_identifier == mock_recipient_identifier
+    ).order_by(models.SharedPlan.sharer_id).all() # Order by sharer_id for consistent dropdown later
+
+    sharers_for_dropdown = []
+    latest_plans_data_for_js = {}
+
+    for share_record in latest_share_records_for_recipient:
+        sharer_id = share_record.sharer_id
+        
+        # Add sharer to dropdown list if not already (though subquery should ensure uniqueness by sharer_id)
+        # For display purposes, we can format a name.
+        sharers_for_dropdown.append({
+            'id': sharer_id,
+            'display_text': f"Plan from User {sharer_id}" 
+        })
+
+        sharer_workout_entries = models.WorkoutPlan.query.filter_by(user_id=sharer_id).all()
+        
+        sharer_plans_by_day = {day: [] for day in ordered_days} # Use ordered_days for consistency
+        has_plan_entries = False
+        for entry in sharer_workout_entries:
+            # Ensure day_of_week is one of the predefined keys
+            day_key = entry.day_of_week.lower()
+            if day_key in sharer_plans_by_day:
+                sharer_plans_by_day[day_key].append(entry.to_dict())
+                has_plan_entries = True
+        
+        # Ensure all days are present in the final dict, even if empty
+        ordered_sharer_plans = {day: sharer_plans_by_day.get(day, []) for day in ordered_days}
+
+        latest_plans_data_for_js[str(sharer_id)] = { # Use string key for JS object
+            'sharer_id': sharer_id, # Keep original int id if needed elsewhere
+            'shared_at': share_record.shared_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'recipient_identifier': share_record.recipient_identifier,
+            'plan_details': ordered_sharer_plans,
+            'plan_exists': has_plan_entries
+        }
+        
+    return render_template(
+        "posts.html", 
+        title="My Workout Week & Shared Plans", 
+        my_plans_data=ordered_my_plans_by_day, 
+        mock_user_id=mock_user_id, 
+        # Pass new data structures to the template
+        sharers_for_dropdown=sharers_for_dropdown,
+        latest_plans_data_json=json.dumps(latest_plans_data_for_js), # Serialize to JSON string
+        mock_recipient_identifier=mock_recipient_identifier
+    )
 
 # Define route for the user profile page
 @app.route("/profile")
@@ -214,6 +295,51 @@ def save_workout_plan():
         import traceback
         traceback.print_exc() # Print detailed traceback to server logs
         return jsonify({"error": "Failed to save workout plan", "details": str(e)}), 500
+    
+@app.route("/api/mock_share_plan", methods=['POST'])
+def mock_share_plan():
+    """
+    Mock endpoint to simulate sharing a workout plan.
+    Accepts a target user identifier and the ID of the user sharing the plan.
+    Now saves the record to SharedPlan table.
+    """
+    if not request.is_json:
+        current_app.logger.error("Request to /api/mock_share_plan was not JSON")
+        return jsonify({"error": "Request must be JSON"}), 400
+
+    data = request.get_json()
+    current_app.logger.info(f"Received data for /api/mock_share_plan: {data}")
+
+    target_user = data.get('targetUser')
+    sharer_user_id = data.get('sharerUserId')
+
+    if not target_user or sharer_user_id is None: 
+        current_app.logger.error(
+            f"Missing data for /api/mock_share_plan - "
+            f"target_user: {target_user}, sharer_user_id: {sharer_user_id}"
+        )
+        return jsonify({"error": "Missing targetUser or sharerUserId in request body"}), 400
+
+    try:
+        new_share = models.SharedPlan(
+            sharer_id=sharer_user_id,
+            recipient_identifier=target_user
+            # shared_at will be set by default by the model
+        )
+        db.session.add(new_share)
+        db.session.commit()
+        
+        current_app.logger.info(f"New share record created: ID={new_share.id}, Sharer={sharer_user_id}, Recipient={target_user}")
+        
+        return jsonify({
+            "message": "Plan shared and record created successfully.",
+            "share_details": new_share.to_dict() # Optionally return details of the created share
+        }), 201 # 201 Created is more appropriate here
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error creating share record: {e}")
+        return jsonify({"error": "Failed to create share record in database.", "details": str(e)}), 500
 
 # Run the application in debug mode if this file is executed directly
 if __name__ == "__main__":
