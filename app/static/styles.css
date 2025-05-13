@@ -343,20 +343,6 @@ body {
     font-size: 16px;
 }
 
-.signup-form .form-group:nth-child(2),
-.signup-form .form-group:nth-child(3) {
-    display: inline-block;
-}
-
-.signup-form .form-group:nth-child(2) {
-    width: 48%;
-}
-
-.signup-form .form-group:nth-child(3) {
-    width: 48%;
-    margin-left: 3%;
-}
-
 .signup-form .submit-btn {
     width: 100%;
     padding: 12px;
@@ -466,13 +452,6 @@ body {
     .signup-container {
         margin: 20px;
         padding: 15px;
-    }
-
-    .signup-form .form-group:first-child,
-    .signup-form .form-group:nth-child(2) {
-        width: 100%;
-        display: block;
-        margin-right: 0;
     }
 }
 
