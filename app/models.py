@@ -1,6 +1,6 @@
 from app.app import db # Import the db instance from app.py
 from werkzeug.security import generate_password_hash, check_password_hash
-import datetime # Import datetime for timestamping
+from datetime import datetime, timezone # Import datetime for timestamping
 from flask_login import UserMixin # Import UserMixin
 
 class User(UserMixin, db.Model): # Inherit from UserMixin
@@ -81,7 +81,7 @@ class SharedPlan(db.Model):
     sharer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
     # Foreign Key to the user who received the plan (replaces recipient_identifier)
     recipient_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
-    shared_at = db.Column(db.DateTime, nullable=False, default=datetime.datetime.utcnow)
+    shared_at = db.Column(db.DateTime, nullable=False, default=datetime.now(timezone.utc))
 
     # Relationships
     # Many-to-One: Link back to the sharer User
@@ -99,3 +99,19 @@ class SharedPlan(db.Model):
             'recipient_id': self.recipient_id,
             'shared_at': self.shared_at.isoformat()
         }
+    
+class SavedWorkouts(db.Model):
+    #Most of the columns are the same as the other workout tables
+    id = db.Column(db.Integer, primary_key=True)
+    day_of_week = db.Column(db.String(10), nullable=False, index=True)
+    exercise_name = db.Column(db.String(100), nullable=False)
+    calories_per_set = db.Column(db.Integer, nullable=False)
+    sets = db.Column(db.Integer, nullable=False, default=3)
+    reps = db.Column(db.Integer, nullable=False, default=10)
+    weight = db.Column(db.Integer, nullable=False, default=5)
+
+    #The date the workouts were saved
+    save_date = db.Column(db.DateTime, nullable=False, default=datetime.now(timezone.utc))
+
+    #Link the user_id to the users table
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
