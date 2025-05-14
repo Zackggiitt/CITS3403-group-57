@@ -49,6 +49,7 @@ class WorkoutPlan(db.Model):
     # New fields, allow null values
     sets = db.Column(db.Integer, nullable=False, default=3)
     reps = db.Column(db.Integer, nullable=False, default=10)
+    weight = db.Column(db.Integer, nullable=False, default=5)
     # Foreign Key to User table
     # Made non-nullable as a workout plan must belong to a user
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
@@ -58,7 +59,7 @@ class WorkoutPlan(db.Model):
 
     def __repr__(self):
         # String representation for debugging
-        return f'<WorkoutPlan {self.day_of_week}: {self.exercise_name} {self.sets}x{self.reps} by User {self.user_id}>'
+        return f'<WorkoutPlan {self.day_of_week}: {self.exercise_name} {self.sets}x{self.reps} at {self.weight}kg by User {self.user_id}>'
 
     def to_dict(self):
         return {
@@ -68,7 +69,8 @@ class WorkoutPlan(db.Model):
             'name': self.exercise_name,
             'calories': self.calories_per_set, # Match the potentially renamed column
             'sets': self.sets,
-            'reps': self.reps
+            'reps': self.reps,
+            'weight': self.weight
         }
 
 class SharedPlan(db.Model):
