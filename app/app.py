@@ -228,7 +228,7 @@ def get_workout_plan():
     """Fetches the entire workout plan from the database."""
     try:
         # Query all workout plan entries
-        plan_entries = models.WorkoutPlan.query.all()
+        plan_entries = models.WorkoutPlan.query.filter_by(user_id=current_user.id).all()
         
         # Organize data by day
         plan_data = {}
@@ -251,6 +251,46 @@ def get_workout_plan():
         current_app.logger.error(f"Error fetching workout plan: {e}")
         return jsonify({"error": "Failed to retrieve workout plan"}), 500
 
+@app.route("/api/saved_workout", methods=['GET'])
+def get_submitted_this_week():
+    """Fetches the workout plan submitted this week"""
+    try:
+        # Get the start of the current week (Monday)
+        today = datetime.now(timezone.utc)
+        start_of_week = today - timedelta(days=today.weekday())
+        start_of_week = start_of_week.replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        # Get the saved workout for this week
+        saved_workout = models.SavedWorkouts.query.filter(
+            models.SavedWorkouts.user_id == current_user.id,
+            models.SavedWorkouts.save_date >= start_of_week
+        ).all()
+        
+        # Organize data by day
+        plan_data = {}
+        for entry in saved_workout:
+            day = entry.day_of_week # Use the correct attribute name
+            if day not in plan_data:
+                plan_data[day] = []
+            # Use the to_dict method which now includes sets and reps
+            plan_data[day].append({
+                'name': entry.exercise_name,
+                'calories': entry.calories_per_set,
+                'sets': entry.sets,
+                'reps': entry.reps,
+                'weight': entry.weight
+            })
+
+        # Return the organized data
+        # Check if plan_data is empty and return appropriate response
+        if not plan_data:
+             return jsonify({"message": "No workout plan found"}), 404
+        
+        return jsonify(plan_data), 200
+    except Exception as e:
+        current_app.logger.error(f"Error fetching workout plan: {e}")
+        return jsonify({"error": "Failed to retrieve workout plan"}), 500
+
 @app.route("/api/workout_plan", methods=['POST'])
 @login_required # Secure this API endpoint
 def save_workout_plan():
@@ -262,7 +302,7 @@ def save_workout_plan():
             return jsonify({"error": "Invalid or empty request body"}), 400
 
         # Clear existing plan entries (assuming a single plan for now)
-        models.WorkoutPlan.query.delete()
+        models.WorkoutPlan.query.filter_by(user_id=current_user.id).delete()
         
         new_entries = []
         # Check if plan_data is actually a dictionary before iterating

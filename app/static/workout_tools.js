@@ -602,6 +602,11 @@ document.addEventListener('DOMContentLoaded', function () {
     loadWorkoutPlan().catch(error => {
         console.error("Error loading workout plan:", error);
     });
+
+    // Load saved workout data
+    loadSavedWorkout().catch(error => {
+        console.error("Error loading saved workout:", error);
+    });
 });
 
 // Load exercises into the grid
@@ -1286,6 +1291,7 @@ async function loadWorkoutPlan() {
                     exerciseElement.className = 'workout-exercise';
                     exerciseElement.dataset.sets = sets;
                     exerciseElement.dataset.reps = reps;
+                    exerciseElement.dataset.weight = weight;
                     exerciseElement.dataset.caloriesPerSet = caloriesPerSet;
 
                     exerciseElement.innerHTML = `
@@ -1543,5 +1549,67 @@ async function saveWorkout() {
         const saveBtn = document.getElementById('saveWorkoutBtn');
         saveBtn.innerHTML = '<i class="fas fa-save"></i> Save This Week\'s Workout';
         saveBtn.disabled = false;
+    }
+}
+
+async function loadSavedWorkout() {
+    try {
+        const response = await fetch("/api/saved_workout");
+        if (!response.ok) {
+            if (response.status === 404) {
+                console.log("[loadWorkoutPlan] No existing plan found on server (404). Initializing empty chart.");
+                const slotsContainer = document.getElementById('saved_workout');
+                if (slotsContainer) {
+                    slotsContainer.querySelectorAll('.workout-slot .workout-exercise').forEach(el => el.remove());
+                }
+                return;
+            }
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const planData = await response.json();
+
+        const slotsContainer = document.getElementById('saved_workout');
+        slotsContainer.querySelectorAll('.workout-slot .workout-exercise').forEach(el => el.remove());
+
+        const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+
+        console.log("[loadWorkoutPlan] Fetched plan data:", planData);
+
+        for (const day in planData) {
+            const lowerCaseDay = day.toLowerCase();
+            if (!days.includes(lowerCaseDay)) continue;
+
+            const dayIndex = days.indexOf(lowerCaseDay);
+            const slot = slotsContainer.querySelector(`.workout-slot[data-day="${lowerCaseDay}"]`);
+
+            if (slot && Array.isArray(planData[day])) {
+                planData[day].forEach(exercise => {
+                    // Backend now returns sets/reps reliably
+                    const sets = parseInt(exercise.sets, 10) || 1; // Default to 1 set if parsing fails
+                    const reps = parseInt(exercise.reps, 10) || 1; // Default to 1 rep
+                    const weight = parseInt(exercise.weight, 10) || 5; // Default to 5kg
+
+                    const exerciseElement = document.createElement('div');
+                    exerciseElement.className = 'workout-exercise';
+                    exerciseElement.dataset.sets = sets;
+                    exerciseElement.dataset.reps = reps;
+                    exerciseElement.dataset.weight = weight;
+                    exerciseElement.innerHTML = `
+                        <h4 class="exercise-name">${exercise.name}</h4>
+                        <p class="exercise-sets-reps">${sets} sets x ${reps} reps</p>
+                        <p class="exercise-weight">${weight}kg</p>
+                    `;
+                    slot.appendChild(exerciseElement);
+                });
+
+            } else if (!Array.isArray(planData[day])) {
+                console.warn(`[loadWorkoutPlan] Data for day '${day}' is not an array:`, planData[day]);
+            } else {
+                 console.warn(`[loadWorkoutPlan] Could not find slot DOM element for day: ${lowerCaseDay}`);
+            }
+        }
+
+    } catch (error) {
+        console.error("Error loading workout plan:", error);
     }
 }
