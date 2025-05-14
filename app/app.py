@@ -396,7 +396,7 @@ def share_plan(): # Renamed function
 def logout():
     logout_user() # Log the user out
     flash("You have been logged out.")
-    return redirect(url_for('login')) # Redirect to login page after logout
+    return redirect(url_for('index')) # Redirect to login page after logout
 
 # Run the application in debug mode if this file is executed directly
 if __name__ == "__main__":
