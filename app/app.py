@@ -275,9 +275,10 @@ def save_workout_plan():
                         calories_per_set = exercise.get('calories') 
                         sets = exercise.get('sets')
                         reps = exercise.get('reps')
+                        weight = exercise.get('weight')
 
                         # Basic validation
-                        if not all([name, calories_per_set is not None, sets is not None, reps is not None]):
+                        if not all([name, calories_per_set is not None, sets is not None, reps is not None, weight is not None]):
                              current_app.logger.warning(f"Skipping invalid exercise data for day {day}: {exercise}")
                              continue # Skip this exercise if data is missing
                         
@@ -286,6 +287,7 @@ def save_workout_plan():
                             calories_per_set = int(calories_per_set)
                             sets = int(sets)
                             reps = int(reps)
+                            weight = int(weight)
                         except (ValueError, TypeError) as ve:
                              current_app.logger.warning(f"Skipping exercise due to invalid numeric value for day {day}: {exercise} - Error: {ve}")
                              continue # Skip if conversion fails
@@ -297,7 +299,8 @@ def save_workout_plan():
                             exercise_name=name,
                             calories_per_set=calories_per_set,
                             sets=sets,
-                            reps=reps
+                            reps=reps,
+                            weight = weight
                         )
                         new_entries.append(new_entry)
                 else:
