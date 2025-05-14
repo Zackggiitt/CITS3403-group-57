@@ -223,6 +223,7 @@ def edit_profile():
         current_user.first_name = form.first_name.data
         current_user.last_name = form.last_name.data
         current_user.bio = form.bio.data
+        current_user.bmr = form.bmr.data
         db.session.commit()
         flash('Your profile has been updated.')
         return redirect(url_for('profile'))
@@ -230,6 +231,7 @@ def edit_profile():
         form.first_name.data = current_user.first_name
         form.last_name.data = current_user.last_name
         form.bio.data = current_user.bio
+        form.bmr.data = current_user.bmr
     return render_template('edit_profile.html', title='Edit Profile', form=form)
 
 @app.route("/api/workout_history", methods=['GET'])
