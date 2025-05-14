@@ -22,13 +22,13 @@
                 <div class="stat-item">
                     <i class="fas fa-dumbbell"></i>
                     <h3>Total Volume</h3>
-                    <p class="stat-number">10,000</p>
+                    <p class="stat-number">{{ "{:,}".format(total_volume) }}</p>
                     <p class="stat-category">kg</p>
                 </div>
                 <div class="stat-item">
                     <i class="fas fa-chart-line"></i>
                     <h3>Workouts</h3>
-                    <p class="stat-number">156</p>
+                    <p class="stat-number">{{ "{:,}".format(total_workouts) }}</p>
                     <p class="stat-category">sessions</p>
                 </div>
             </div>

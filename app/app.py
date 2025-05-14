@@ -10,7 +10,7 @@ from flask_login import LoginManager, UserMixin, login_user, logout_user, login_
 
 import os
 from dotenv import load_dotenv
-from sqlalchemy import desc # Added for ordering
+from sqlalchemy import desc, String # Added for ordering
 from sqlalchemy.sql import func
 import json
 from datetime import datetime, timezone, timedelta
@@ -213,7 +213,28 @@ def posts():
 @app.route("/profile")
 @login_required # Add decorator to require login for this page
 def profile():
-    return render_template("profile.html", title="Profile")
+    # Calculate total volume from saved workouts
+    total_volume = db.session.query(
+        func.sum(models.SavedWorkouts.sets * models.SavedWorkouts.reps * models.SavedWorkouts.weight)
+    ).filter(
+        models.SavedWorkouts.user_id == current_user.id
+    ).scalar() or 0
+
+    # Count total number of unique workout sessions
+    total_workouts = db.session.query(
+    func.count(func.distinct(
+        func.cast(models.SavedWorkouts.save_date, String) + models.SavedWorkouts.day_of_week
+    ))
+    ).filter(
+        models.SavedWorkouts.user_id == current_user.id
+    ).scalar() or 0
+
+    return render_template(
+        "profile.html", 
+        title="Profile",
+        total_volume=total_volume,
+        total_workouts=total_workouts
+    )
 
 @app.route("/edit_profile", methods=['GET', 'POST'])
 @login_required
