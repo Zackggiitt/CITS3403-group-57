@@ -1,7 +1,7 @@
 from flask import Flask, render_template, url_for, redirect, request, jsonify, current_app, flash # Import flash
 from flask_wtf.csrf import CSRFProtect
 from werkzeug.security import generate_password_hash, check_password_hash
-from .forms import SignupForm, LoginForm
+from .forms import SignupForm, LoginForm, EditProfileForm
 from config import Config # Import configuration
 from flask_sqlalchemy import SQLAlchemy # Import SQLAlchemy
 from flask_migrate import Migrate # Import Migrate
@@ -213,9 +213,24 @@ def posts():
 @app.route("/profile")
 @login_required # Add decorator to require login for this page
 def profile():
-    # You can now access the logged-in user via current_user
-    # Example: return render_template("profile.html", title="Profile", user=current_user)
     return render_template("profile.html", title="Profile")
+
+@app.route("/edit_profile", methods=['GET', 'POST'])
+@login_required
+def edit_profile():
+    form = EditProfileForm()
+    if form.validate_on_submit():
+        current_user.first_name = form.first_name.data
+        current_user.last_name = form.last_name.data
+        current_user.bio = form.bio.data
+        db.session.commit()
+        flash('Your profile has been updated.')
+        return redirect(url_for('profile'))
+    elif request.method == 'GET':
+        form.first_name.data = current_user.first_name
+        form.last_name.data = current_user.last_name
+        form.bio.data = current_user.bio
+    return render_template('edit_profile.html', title='Edit Profile', form=form)
 
 # Define route for the workout tools page
 @app.route("/tools")
@@ -283,7 +298,7 @@ def get_submitted_this_week():
 
         # Return the organized data
         # Check if plan_data is empty and return appropriate response
-        if not plan_data:
+        if not plan_data:   
              return jsonify({"message": "No workout plan found"}), 404
         
         return jsonify(plan_data), 200

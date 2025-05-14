@@ -9,6 +9,7 @@ class User(UserMixin, db.Model): # Inherit from UserMixin
     first_name = db.Column(db.String(50), nullable=False)
     last_name = db.Column(db.String(50), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
+    bio = db.Column(db.String(200), nullable=True, default="Edit your profile to add a bio!")
     password_hash = db.Column(db.String(128), nullable=False)
     
     # Relationships
@@ -38,7 +39,8 @@ class User(UserMixin, db.Model): # Inherit from UserMixin
             'id': self.id,
             'first_name': self.first_name,
             'last_name': self.last_name,
-            'email': self.email
+            'email': self.email,
+            'bio': self.bio
         }
 
 
