@@ -18,6 +18,8 @@ class User(UserMixin, db.Model): # Inherit from UserMixin
     shared_plans_sent = db.relationship('SharedPlan', foreign_keys='SharedPlan.sharer_id', back_populates='sharer', lazy='dynamic', cascade="all, delete-orphan")
     # One-to-Many: A user can receive many shared plans (as the recipient)
     shared_plans_received = db.relationship('SharedPlan', foreign_keys='SharedPlan.recipient_id', back_populates='recipient', lazy='dynamic', cascade="all, delete-orphan")
+    # One-to-Many: A user can have many saved workout plans
+    saved_workouts = db.relationship('SavedWorkouts', back_populates='user', lazy='dynamic', cascade="all, delete-orphan")
 
     def __repr__(self):
         return f'<User {self.email}>'
@@ -113,5 +115,8 @@ class SavedWorkouts(db.Model):
     #The date the workouts were saved
     save_date = db.Column(db.DateTime, nullable=False, default=datetime.now(timezone.utc))
 
-    #Link the user_id to the users table
+    #Add the foreign key
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    
+    #Add the relationship back to User
+    user = db.relationship('User', back_populates='saved_workouts')

@@ -1455,3 +1455,93 @@ async function saveWorkoutPlan() {
         alert(`Failed to save workout plan: ${error.message}`); // Provide feedback to user
     }
 } 
+
+// Add save workout button event listener
+const saveWorkoutBtn = document.getElementById('saveWorkoutBtn');
+if (saveWorkoutBtn) {
+    saveWorkoutBtn.addEventListener('click', handleSaveWorkoutClick);
+}
+
+// Add event listeners for the save confirmation modal
+const saveConfirmationModal = document.getElementById('save-confirmation-modal');
+if (saveConfirmationModal) {
+    // Close modal when clicking the X
+    saveConfirmationModal.querySelector('.close-modal').addEventListener('click', () => {
+        saveConfirmationModal.style.display = 'none';
+    });
+
+    // Close modal when clicking outside
+    window.addEventListener('click', (event) => {
+        if (event.target === saveConfirmationModal) {
+            saveConfirmationModal.style.display = 'none';
+        }
+    });
+
+    // Handle cancel button
+    document.getElementById('cancel-save-btn').addEventListener('click', () => {
+        saveConfirmationModal.style.display = 'none';
+    });
+
+    // Handle confirm button
+    document.getElementById('confirm-save-btn').addEventListener('click', () => {
+        saveConfirmationModal.style.display = 'none';
+        saveWorkout();
+    });
+}
+
+function handleSaveWorkoutClick() {
+    const saveConfirmationModal = document.getElementById('save-confirmation-modal');
+    if (saveConfirmationModal) {
+        saveConfirmationModal.style.display = 'block';
+    }
+}
+
+async function saveWorkout() {
+    try {
+        // Get CSRF token
+        const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
+        const csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : null;
+
+        if (!csrfToken) {
+            console.error("[saveWorkout] CSRF token not found!");
+            alert("Error: Security token missing. Please refresh the page.");
+            return;
+        }
+
+        // Show loading state
+        const saveBtn = document.getElementById('saveWorkoutBtn');
+        const originalText = saveBtn.innerHTML;
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        saveBtn.disabled = true;
+
+        const response = await fetch('/api/save_workout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            }
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || 'Failed to save workout');
+        }
+
+        // Show success message
+        alert('Workout saved successfully!');
+        
+        // Reset button state
+        saveBtn.innerHTML = originalText;
+        saveBtn.disabled = false;
+
+    } catch (error) {
+        console.error('[saveWorkout] Error:', error);
+        alert(error.message || 'Failed to save workout. Please try again.');
+        
+        // Reset button state
+        const saveBtn = document.getElementById('saveWorkoutBtn');
+        saveBtn.innerHTML = '<i class="fas fa-save"></i> Save This Week\'s Workout';
+        saveBtn.disabled = false;
+    }
+}

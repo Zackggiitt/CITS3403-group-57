@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 from sqlalchemy import desc # Added for ordering
 from sqlalchemy.sql import func
 import json
+from datetime import datetime, timezone, timedelta
 
 # Load environment variables from .env file
 load_dotenv()
@@ -328,7 +329,65 @@ def save_workout_plan():
         import traceback
         traceback.print_exc() # Print detailed traceback to server logs
         return jsonify({"error": "Failed to save workout plan", "details": str(e)}), 500
-    
+
+@app.route("/api/save_workout", methods=['POST'])
+@login_required
+def save_workout():
+    """Saves the current workout plan to saved_workouts table with a date."""
+    try:
+        # Get current user's workout plan
+        current_plan = models.WorkoutPlan.query.filter_by(user_id=current_user.id).all()
+        
+        if not current_plan:
+            return jsonify({"error": "No workout plan found to save"}), 400
+
+        # Get current datetime
+        now = datetime.now(timezone.utc)
+
+        # Calculate the start of the current week (assuming week starts on Monday)
+        start_of_week = now - timedelta(days=now.weekday())
+        start_of_week = start_of_week.replace(hour=0, minute=0, second=0, microsecond=0)
+
+        # Query for saved workouts since the beginning of the week
+        recent_saved = models.SavedWorkouts.query.filter(
+            models.SavedWorkouts.user_id == current_user.id,
+            models.SavedWorkouts.save_date >= start_of_week
+        ).first()
+
+        if recent_saved:
+            return jsonify({
+                "error": "You have already saved a workout this week. Please wait until next week to save again."
+            }), 400
+
+        # Create new saved workout entries
+        new_saved_workouts = []
+        for workout in current_plan:
+            saved_workout = models.SavedWorkouts(
+                user_id=current_user.id,
+                day_of_week=workout.day_of_week,
+                exercise_name=workout.exercise_name,
+                calories_per_set=workout.calories_per_set,
+                sets=workout.sets,
+                reps=workout.reps,
+                weight=workout.weight
+                # save_date will be automatically set by the default to maintain data integrity
+            )
+            new_saved_workouts.append(saved_workout)
+
+        # Add all new entries to the session and commit
+        db.session.add_all(new_saved_workouts)
+        db.session.commit()
+
+        return jsonify({
+            "message": "Workout saved successfully",
+            "saved_count": len(new_saved_workouts)
+        }), 201
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error saving workout: {e}")
+        return jsonify({"error": "Failed to save workout", "details": str(e)}), 500
+
 @app.route("/api/share_plan", methods=['POST'])
 @login_required 
 def share_plan(): # Renamed function
