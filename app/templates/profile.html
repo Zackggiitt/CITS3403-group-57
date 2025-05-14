@@ -5,9 +5,9 @@
     <section class="profile-container">
         <div class="profile-header">
             <div class="profile-picture-container">
-                <img src="https://ui-avatars.com/api/?name=John+Doe&background=4CAF50&color=fff&size=150" alt="Profile Picture" class="profile-picture">
+                <img src="https://ui-avatars.com/api/?name={{ current_user.first_name }}+{{ current_user.last_name }}&background=4CAF50&color=fff&size=150" alt="Profile Picture" class="profile-picture">
             </div>
-            <h1 class="profile-name">John Doe</h1>
+            <h1 class="profile-name">{{ current_user.first_name }} {{ current_user.last_name }}</h1>
             <p class="profile-bio">Fitness enthusiast | Marathon runner | Healthy living advocate</p>
         </div>
 
