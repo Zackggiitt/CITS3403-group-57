@@ -216,24 +216,40 @@
             selectedSharedPlanDisplay.style.display = 'none'; // Hide initially
 
             if (selectedSharerId && allLatestPlansData[selectedSharerId]) {
-                const plans = allLatestPlansData[selectedSharerId];
-                const planHtml = plans.map(dayPlan => {
-                    const exercisesHtml = dayPlan.exercises.length > 0 ?
-                        `<ul class="exercise-list">
-                            ${dayPlan.exercises.map(ex => `<li><strong>${ex.name}</strong> <span class="exercise-details">${ex.sets} sets x ${ex.reps} reps (${ex.calories} Cal)</span></li>`).join('')}
-                        </ul>` :
-                        '<p class="rest-day-message">Rest day or no plans for today.</p>';
-                    return `<div class="day-plan-shared mb-3">
-                                <h4 class="day-header">${dayPlan.day.charAt(0).toUpperCase() + dayPlan.day.slice(1)}</h4>
-                                ${exercisesHtml}
-                            </div>`;
-                }).join('');
+                const sharedPlanData = allLatestPlansData[selectedSharerId]; // This is the object for the selected sharer
+                const planDetails = sharedPlanData.plan_details; // This is the object with days as keys
+                let planHtml = '';
 
-                // Wrap the plan in card-body if selectedSharedPlanDisplay is already a card
+                if (sharedPlanData.plan_exists && Object.keys(planDetails).length > 0) {
+                    // Iterate over ordered days to maintain consistency, or just keys of planDetails
+                    const orderedDays = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+                    orderedDays.forEach(day => {
+                        if (planDetails[day] && planDetails[day].length > 0) {
+                            const dayExercises = planDetails[day];
+                            const exercisesHtml = `<ul class="exercise-list">
+                                ${dayExercises.map(ex => `<li><strong>${ex.name}</strong> <span class="exercise-details">${ex.sets} sets x ${ex.reps} reps (${ex.calories} Cal)</span></li>`).join('')}
+                            </ul>`;
+                            planHtml += `<div class="day-plan-shared mb-3">
+                                            <h4 class="day-header">${day.charAt(0).toUpperCase() + day.slice(1)}</h4>
+                                            ${exercisesHtml}
+                                        </div>`;
+                        } else if (planDetails[day]) { // Day exists but is empty (e.g. rest day defined)
+                            planHtml += `<div class="day-plan-shared mb-3">
+                                            <h4 class="day-header">${day.charAt(0).toUpperCase() + day.slice(1)}</h4>
+                                            <p class="rest-day-message">Rest day or no plans for today.</p>
+                                        </div>`;
+                        }
+                    });
+                    if (!planHtml) { // Case where plan_exists is true, but planDetails was empty or no matching days
+                        planHtml = '<p class="rest-day-message">This shared plan currently has no exercises.</p>';
+                    }
+                } else {
+                    planHtml = '<p class="rest-day-message">This user has not set up a detailed workout plan to share.</p>';
+                }
+
                 selectedSharedPlanDisplay.innerHTML = `<div class="card-body">${planHtml}</div>`;
                 selectedSharedPlanDisplay.style.display = 'block'; // Show the card
             } else {
-                // If no plan selected or data missing, show placeholder inside card-body
                 selectedSharedPlanDisplay.innerHTML = `<div class="card-body"><p class="placeholder-text" style="color: #757575; text-align: center;">Please select a plan or no plan data available.</p></div>`;
                 selectedSharedPlanDisplay.style.display = 'block'; // Show card with placeholder
             }
