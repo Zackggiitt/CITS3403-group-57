@@ -367,19 +367,22 @@ def get_workout_plan():
         current_app.logger.error(f"Error fetching workout plan: {e}")
         return jsonify({"error": "Failed to retrieve workout plan"}), 500
 
-@app.route("/api/saved_workout", methods=['GET'])
+@app.route("/api/get_saved_workout", methods=['GET'])
 def get_submitted_this_week():
     """Fetches the workout plan submitted this week"""
     try:
         # Get the start of the current week (Monday)
+        week_offset = int(request.args.get('week_offset', 0))
         today = datetime.now(timezone.utc)
-        start_of_week = today - timedelta(days=today.weekday())
+        start_of_week = today - timedelta(days=today.weekday(), weeks=week_offset)
         start_of_week = start_of_week.replace(hour=0, minute=0, second=0, microsecond=0)
+        end_of_week = start_of_week + timedelta(days=7)
         
         # Get the saved workout for this week
         saved_workout = models.SavedWorkouts.query.filter(
             models.SavedWorkouts.user_id == current_user.id,
-            models.SavedWorkouts.save_date >= start_of_week
+            models.SavedWorkouts.save_date >= start_of_week,
+            models.SavedWorkouts.save_date < end_of_week
         ).all()
         
         # Organize data by day

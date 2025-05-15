@@ -607,6 +607,11 @@ document.addEventListener('DOMContentLoaded', function () {
     loadSavedWorkout().catch(error => {
         console.error("Error loading saved workout:", error);
     });
+
+    const weekSelect = document.getElementById('week-select');
+    if (weekSelect) {
+        weekSelect.addEventListener('change', loadSavedWorkout);
+    }
 });
 
 // Load exercises into the grid
@@ -1559,9 +1564,28 @@ async function saveWorkout() {
     }
 }
 
+function updateSavedWorkoutTitle(weekOffset) {
+    const titleEl = document.getElementById('saved-workout-title');
+    if (!titleEl) return;
+
+    if (weekOffset === 0) {
+        titleEl.textContent = "This Week's Saved Workout";
+    } else if (weekOffset === 1) {
+        titleEl.textContent = "Last Week's Saved Workout";
+    } else {
+        titleEl.textContent = `${weekOffset} Weeks Ago's Saved Workout`;
+    }
+}
+
 async function loadSavedWorkout() {
     try {
-        const response = await fetch("/api/saved_workout");
+        const weekSelect = document.getElementById('week-select');
+        const weekOffset = weekSelect ? parseInt(weekSelect.value, 10) : 0;
+
+        // Update the title of the saved workout section
+        updateSavedWorkoutTitle(weekOffset);
+
+        const response = await fetch("/api/get_saved_workout?week_offset=" + weekOffset);
         if (!response.ok) {
             if (response.status === 404) {
                 console.log("[loadWorkoutPlan] No existing plan found on server (404). Initializing empty chart.");
