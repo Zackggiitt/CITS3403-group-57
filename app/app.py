@@ -1,7 +1,7 @@
 from flask import Flask, render_template, url_for, redirect, request, jsonify, current_app, flash # Import flash
 from flask_wtf.csrf import CSRFProtect
 from werkzeug.security import generate_password_hash, check_password_hash
-from .forms import SignupForm, LoginForm
+from .forms import SignupForm, LoginForm, EditProfileForm
 from config import Config # Import configuration
 from flask_sqlalchemy import SQLAlchemy # Import SQLAlchemy
 from flask_migrate import Migrate # Import Migrate
@@ -10,9 +10,10 @@ from flask_login import LoginManager, UserMixin, login_user, logout_user, login_
 
 import os
 from dotenv import load_dotenv
-from sqlalchemy import desc # Added for ordering
+from sqlalchemy import desc, String # Added for ordering
 from sqlalchemy.sql import func
 import json
+from datetime import datetime, timezone, timedelta
 
 # Load environment variables from .env file
 load_dotenv()
@@ -212,10 +213,116 @@ def posts():
 @app.route("/profile")
 @login_required # Add decorator to require login for this page
 def profile():
-    # You can now access the logged-in user via current_user
-    # Example: return render_template("profile.html", title="Profile", user=current_user)
-    return render_template("profile.html", title="Profile")
+    # Calculate total volume from saved workouts
+    total_volume = db.session.query(
+        func.sum(models.SavedWorkouts.sets * models.SavedWorkouts.reps * models.SavedWorkouts.weight)
+    ).filter(
+        models.SavedWorkouts.user_id == current_user.id
+    ).scalar() or 0
 
+    # Count total number of unique workout sessions
+    total_workouts = db.session.query(
+    func.count(func.distinct(
+        func.cast(models.SavedWorkouts.save_date, String) + models.SavedWorkouts.day_of_week
+    ))
+    ).filter(
+        models.SavedWorkouts.user_id == current_user.id
+    ).scalar() or 0
+
+    return render_template(
+        "profile.html", 
+        title="Profile",
+        total_volume=total_volume,
+        total_workouts=total_workouts
+    )
+
+@app.route("/edit_profile", methods=['GET', 'POST'])
+@login_required
+def edit_profile():
+    form = EditProfileForm()
+    if form.validate_on_submit():
+        current_user.first_name = form.first_name.data
+        current_user.last_name = form.last_name.data
+        current_user.bio = form.bio.data
+        current_user.bmr = form.bmr.data
+        db.session.commit()
+        flash('Your profile has been updated.')
+        return redirect(url_for('profile'))
+    elif request.method == 'GET':
+        form.first_name.data = current_user.first_name
+        form.last_name.data = current_user.last_name
+        form.bio.data = current_user.bio
+        form.bmr.data = current_user.bmr
+    return render_template('edit_profile.html', title='Edit Profile', form=form)
+
+@app.route("/api/workout_history", methods=['GET'])
+@login_required
+def get_workout_history():
+    """Fetches the user's workout history for the graphs"""
+    try:
+        # Get the last 5 weeks of saved workouts
+        five_weeks_ago = datetime.now(timezone.utc) - timedelta(weeks=5)
+        
+        # Query saved workouts, ordered by date
+        saved_workouts = models.SavedWorkouts.query.filter(
+            models.SavedWorkouts.user_id == current_user.id,
+            models.SavedWorkouts.save_date >= five_weeks_ago
+        ).order_by(models.SavedWorkouts.save_date).all()
+        
+        # Count exercise frequency
+        exercise_counts = {}
+        for workout in saved_workouts:
+            exercise_name = workout.exercise_name.lower()
+            exercise_counts[exercise_name] = exercise_counts.get(exercise_name, 0) + 1
+        
+        # Get top 3 exercises
+        top_exercises = sorted(exercise_counts.items(), key=lambda x: x[1], reverse=True)[:3]
+        top_exercise_names = [exercise[0] for exercise in top_exercises]
+        
+        # Organize data by week
+        weekly_data = {}
+        for workout in saved_workouts:
+            # Get the start of the week (Monday) for this workout
+            workout_date = workout.save_date
+            week_start = workout_date - timedelta(days=workout_date.weekday())
+            week_key = week_start.strftime('%b %d')  # e.g., 'Jan 15'
+            
+            if week_key not in weekly_data:
+                weekly_data[week_key] = {
+                    'total_volume': 0
+                }
+                # Initialize data for each top exercise
+                for exercise in top_exercise_names:
+                    weekly_data[week_key][exercise] = []
+            
+            # Calculate volume for this exercise
+            volume = workout.sets * workout.reps * workout.weight
+            
+            # Add to total volume
+            weekly_data[week_key]['total_volume'] += volume
+            
+            # Add to specific exercise if it's one of the top exercises
+            exercise_name = workout.exercise_name.lower()
+            if exercise_name in top_exercise_names:
+                weekly_data[week_key][exercise_name].append(workout.weight)
+        
+        # Calculate averages for each exercise
+        for week in weekly_data:
+            for exercise in top_exercise_names:
+                weights = weekly_data[week][exercise]
+                weekly_data[week][exercise] = sum(weights) / len(weights) if weights else 0
+        
+        # Add the top exercise names to the response
+        response_data = {
+            'weekly_data': weekly_data,
+            'top_exercises': top_exercise_names
+        }
+        
+        return jsonify(response_data), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Error fetching workout history: {e}")
+        return jsonify({"error": "Failed to retrieve workout history"}), 500
 # Define route for the workout tools page
 @app.route("/tools")
 @login_required # Add decorator to require login for this page
@@ -227,7 +334,7 @@ def get_workout_plan():
     """Fetches the entire workout plan from the database."""
     try:
         # Query all workout plan entries
-        plan_entries = models.WorkoutPlan.query.all()
+        plan_entries = models.WorkoutPlan.query.filter_by(user_id=current_user.id).all()
         
         # Organize data by day
         plan_data = {}
@@ -250,6 +357,46 @@ def get_workout_plan():
         current_app.logger.error(f"Error fetching workout plan: {e}")
         return jsonify({"error": "Failed to retrieve workout plan"}), 500
 
+@app.route("/api/saved_workout", methods=['GET'])
+def get_submitted_this_week():
+    """Fetches the workout plan submitted this week"""
+    try:
+        # Get the start of the current week (Monday)
+        today = datetime.now(timezone.utc)
+        start_of_week = today - timedelta(days=today.weekday())
+        start_of_week = start_of_week.replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        # Get the saved workout for this week
+        saved_workout = models.SavedWorkouts.query.filter(
+            models.SavedWorkouts.user_id == current_user.id,
+            models.SavedWorkouts.save_date >= start_of_week
+        ).all()
+        
+        # Organize data by day
+        plan_data = {}
+        for entry in saved_workout:
+            day = entry.day_of_week # Use the correct attribute name
+            if day not in plan_data:
+                plan_data[day] = []
+            # Use the to_dict method which now includes sets and reps
+            plan_data[day].append({
+                'name': entry.exercise_name,
+                'calories': entry.calories_per_set,
+                'sets': entry.sets,
+                'reps': entry.reps,
+                'weight': entry.weight
+            })
+
+        # Return the organized data
+        # Check if plan_data is empty and return appropriate response
+        if not plan_data:   
+             return jsonify({"message": "No workout plan found"}), 404
+        
+        return jsonify(plan_data), 200
+    except Exception as e:
+        current_app.logger.error(f"Error fetching workout plan: {e}")
+        return jsonify({"error": "Failed to retrieve workout plan"}), 500
+
 @app.route("/api/workout_plan", methods=['POST'])
 @login_required # Secure this API endpoint
 def save_workout_plan():
@@ -261,7 +408,7 @@ def save_workout_plan():
             return jsonify({"error": "Invalid or empty request body"}), 400
 
         # Clear existing plan entries (assuming a single plan for now)
-        models.WorkoutPlan.query.delete()
+        models.WorkoutPlan.query.filter_by(user_id=current_user.id).delete()
         
         new_entries = []
         # Check if plan_data is actually a dictionary before iterating
@@ -275,9 +422,10 @@ def save_workout_plan():
                         calories_per_set = exercise.get('calories') 
                         sets = exercise.get('sets')
                         reps = exercise.get('reps')
+                        weight = exercise.get('weight')
 
                         # Basic validation
-                        if not all([name, calories_per_set is not None, sets is not None, reps is not None]):
+                        if not all([name, calories_per_set is not None, sets is not None, reps is not None, weight is not None]):
                              current_app.logger.warning(f"Skipping invalid exercise data for day {day}: {exercise}")
                              continue # Skip this exercise if data is missing
                         
@@ -286,6 +434,7 @@ def save_workout_plan():
                             calories_per_set = int(calories_per_set)
                             sets = int(sets)
                             reps = int(reps)
+                            weight = int(weight)
                         except (ValueError, TypeError) as ve:
                              current_app.logger.warning(f"Skipping exercise due to invalid numeric value for day {day}: {exercise} - Error: {ve}")
                              continue # Skip if conversion fails
@@ -297,7 +446,8 @@ def save_workout_plan():
                             exercise_name=name,
                             calories_per_set=calories_per_set,
                             sets=sets,
-                            reps=reps
+                            reps=reps,
+                            weight = weight
                         )
                         new_entries.append(new_entry)
                 else:
@@ -325,7 +475,65 @@ def save_workout_plan():
         import traceback
         traceback.print_exc() # Print detailed traceback to server logs
         return jsonify({"error": "Failed to save workout plan", "details": str(e)}), 500
-    
+
+@app.route("/api/save_workout", methods=['POST'])
+@login_required
+def save_workout():
+    """Saves the current workout plan to saved_workouts table with a date."""
+    try:
+        # Get current user's workout plan
+        current_plan = models.WorkoutPlan.query.filter_by(user_id=current_user.id).all()
+        
+        if not current_plan:
+            return jsonify({"error": "No workout plan found to save"}), 400
+
+        # Get current datetime
+        now = datetime.now(timezone.utc)
+
+        # Calculate the start of the current week (assuming week starts on Monday)
+        start_of_week = now - timedelta(days=now.weekday())
+        start_of_week = start_of_week.replace(hour=0, minute=0, second=0, microsecond=0)
+
+        # Query for saved workouts since the beginning of the week
+        recent_saved = models.SavedWorkouts.query.filter(
+            models.SavedWorkouts.user_id == current_user.id,
+            models.SavedWorkouts.save_date >= start_of_week
+        ).first()
+
+        if recent_saved:
+            return jsonify({
+                "error": "You have already saved a workout this week. Please wait until next week to save again."
+            }), 400
+
+        # Create new saved workout entries
+        new_saved_workouts = []
+        for workout in current_plan:
+            saved_workout = models.SavedWorkouts(
+                user_id=current_user.id,
+                day_of_week=workout.day_of_week,
+                exercise_name=workout.exercise_name,
+                calories_per_set=workout.calories_per_set,
+                sets=workout.sets,
+                reps=workout.reps,
+                weight=workout.weight
+                # save_date will be automatically set by the default to maintain data integrity
+            )
+            new_saved_workouts.append(saved_workout)
+
+        # Add all new entries to the session and commit
+        db.session.add_all(new_saved_workouts)
+        db.session.commit()
+
+        return jsonify({
+            "message": "Workout saved successfully",
+            "saved_count": len(new_saved_workouts)
+        }), 201
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error saving workout: {e}")
+        return jsonify({"error": "Failed to save workout", "details": str(e)}), 500
+
 @app.route("/api/share_plan", methods=['POST'])
 @login_required 
 def share_plan(): # Renamed function
@@ -393,7 +601,7 @@ def share_plan(): # Renamed function
 def logout():
     logout_user() # Log the user out
     flash("You have been logged out.")
-    return redirect(url_for('login')) # Redirect to login page after logout
+    return redirect(url_for('index')) # Redirect to login page after logout
 
 # Run the application in debug mode if this file is executed directly
 if __name__ == "__main__":

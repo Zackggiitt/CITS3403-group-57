@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="edit-profile-container">
+    <form method="POST" class="edit-profile-form">
+        {{ form.hidden_tag() }}
+        <h2>Edit Profile</h2>
+
+        <div class="form-group">
+            {{ form.first_name.label }}
+            {{ form.first_name(class="form-control" + (" is-invalid" if form.first_name.errors else ""), placeholder="Enter Your First Name") }}
+            {% if form.first_name.errors %}
+                <div class="invalid-feedback">
+                    {% for error in form.first_name.errors %}
+                        <span>{{ error }}</span>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            {{ form.last_name.label }}
+            {{ form.last_name(class="form-control" + (" is-invalid" if form.last_name.errors else ""), placeholder="Enter Your Last Name") }}
+            {% if form.last_name.errors %}
+                <div class="invalid-feedback">
+                    {% for error in form.last_name.errors %}
+                        <span>{{ error }}</span>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            {{ form.bio.label }}
+            {{ form.bio(class="form-control" + (" is-invalid" if form.bio.errors else ""), placeholder="Tell us about yourself") }}
+            {% if form.bio.errors %}
+                <div class="invalid-feedback">
+                    {% for error in form.bio.errors %}
+                        <span>{{ error }}</span>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            {{ form.bmr.label }}
+            {{ form.bmr(class="form-control" + (" is-invalid" if form.bmr.errors else ""), placeholder="Enter your BMR") }}
+            {% if form.bmr.errors %}
+                <div class="invalid-feedback">
+                    {% for error in form.bmr.errors %}
+                        <span>{{ error }}</span>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        {{ form.submit(class="submit-btn") }}
+    </form>
+</div>
+{% endblock %}

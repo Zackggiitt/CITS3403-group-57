@@ -1,6 +1,6 @@
 from app.app import db # Import the db instance from app.py
 from werkzeug.security import generate_password_hash, check_password_hash
-import datetime # Import datetime for timestamping
+from datetime import datetime, timezone # Import datetime for timestamping
 from flask_login import UserMixin # Import UserMixin
 
 class User(UserMixin, db.Model): # Inherit from UserMixin
@@ -9,6 +9,8 @@ class User(UserMixin, db.Model): # Inherit from UserMixin
     first_name = db.Column(db.String(50), nullable=False)
     last_name = db.Column(db.String(50), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
+    bio = db.Column(db.String(200), nullable=True, default="Edit your profile to add a bio!")
+    bmr = db.Column(db.Integer, nullable=True, default=0)
     password_hash = db.Column(db.String(128), nullable=False)
     
     # Relationships
@@ -18,6 +20,8 @@ class User(UserMixin, db.Model): # Inherit from UserMixin
     shared_plans_sent = db.relationship('SharedPlan', foreign_keys='SharedPlan.sharer_id', back_populates='sharer', lazy='dynamic', cascade="all, delete-orphan")
     # One-to-Many: A user can receive many shared plans (as the recipient)
     shared_plans_received = db.relationship('SharedPlan', foreign_keys='SharedPlan.recipient_id', back_populates='recipient', lazy='dynamic', cascade="all, delete-orphan")
+    # One-to-Many: A user can have many saved workout plans
+    saved_workouts = db.relationship('SavedWorkouts', back_populates='user', lazy='dynamic', cascade="all, delete-orphan")
 
     def __repr__(self):
         return f'<User {self.email}>'
@@ -36,7 +40,9 @@ class User(UserMixin, db.Model): # Inherit from UserMixin
             'id': self.id,
             'first_name': self.first_name,
             'last_name': self.last_name,
-            'email': self.email
+            'email': self.email,
+            'bio': self.bio,
+            'bmr': self.bmr
         }
 
 
@@ -49,6 +55,7 @@ class WorkoutPlan(db.Model):
     # New fields, allow null values
     sets = db.Column(db.Integer, nullable=False, default=3)
     reps = db.Column(db.Integer, nullable=False, default=10)
+    weight = db.Column(db.Integer, nullable=False, default=5)
     # Foreign Key to User table
     # Made non-nullable as a workout plan must belong to a user
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
@@ -58,7 +65,7 @@ class WorkoutPlan(db.Model):
 
     def __repr__(self):
         # String representation for debugging
-        return f'<WorkoutPlan {self.day_of_week}: {self.exercise_name} {self.sets}x{self.reps} by User {self.user_id}>'
+        return f'<WorkoutPlan {self.day_of_week}: {self.exercise_name} {self.sets}x{self.reps} at {self.weight}kg by User {self.user_id}>'
 
     def to_dict(self):
         return {
@@ -68,7 +75,8 @@ class WorkoutPlan(db.Model):
             'name': self.exercise_name,
             'calories': self.calories_per_set, # Match the potentially renamed column
             'sets': self.sets,
-            'reps': self.reps
+            'reps': self.reps,
+            'weight': self.weight
         }
 
 class SharedPlan(db.Model):
@@ -79,7 +87,7 @@ class SharedPlan(db.Model):
     sharer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
     # Foreign Key to the user who received the plan (replaces recipient_identifier)
     recipient_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
-    shared_at = db.Column(db.DateTime, nullable=False, default=datetime.datetime.utcnow)
+    shared_at = db.Column(db.DateTime, nullable=False, default=datetime.now(timezone.utc))
 
     # Relationships
     # Many-to-One: Link back to the sharer User
@@ -97,3 +105,22 @@ class SharedPlan(db.Model):
             'recipient_id': self.recipient_id,
             'shared_at': self.shared_at.isoformat()
         }
+    
+class SavedWorkouts(db.Model):
+    #Most of the columns are the same as the other workout tables
+    id = db.Column(db.Integer, primary_key=True)
+    day_of_week = db.Column(db.String(10), nullable=False, index=True)
+    exercise_name = db.Column(db.String(100), nullable=False)
+    calories_per_set = db.Column(db.Integer, nullable=False)
+    sets = db.Column(db.Integer, nullable=False, default=3)
+    reps = db.Column(db.Integer, nullable=False, default=10)
+    weight = db.Column(db.Integer, nullable=False, default=5)
+
+    #The date the workouts were saved
+    save_date = db.Column(db.DateTime, nullable=False, default=datetime.now(timezone.utc))
+
+    #Add the foreign key
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    
+    #Add the relationship back to User
+    user = db.relationship('User', back_populates='saved_workouts')

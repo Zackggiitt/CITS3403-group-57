@@ -417,6 +417,66 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Save workout button -->
+                <div class="save-workout-container" style="text-align: center; margin-top: 2rem;">
+                    <button id="saveWorkoutBtn" class="view-details-btn">
+                        <i class="fas fa-save"></i> Save This Week's Workout
+                    </button>
+                </div>
+                
+                <!-- Saved workout section -->
+                <section class="saved-workout">
+                    <h2>This Week's Saved Workout</h2>
+                    <div class="planner-container">
+                        <div class="calendar">
+                            <div class="workout-slots" id="saved_workout">
+                                <div class="day-column">
+                                    Monday
+                                    <div class="workout-slot" data-day="monday">
+                                        <!-- Exercises for Monday will be added here by JS -->
+                                    </div>
+                                </div>
+                                <div class="day-column">
+                                    Tuesday
+                                    <div class="workout-slot" data-day="tuesday">
+                                        <!-- Exercises for Tuesday will be added here by JS -->
+                                    </div>
+                                </div>
+                                <div class="day-column">
+                                    Wednesday
+                                    <div class="workout-slot" data-day="wednesday">
+                                        <!-- Exercises for Wednesday will be added here by JS -->
+                                    </div>
+                                </div>
+                                <div class="day-column">
+                                    Thursday
+                                    <div class="workout-slot" data-day="thursday">
+                                        <!-- Exercises for Thursday will be added here by JS -->
+                                    </div>
+                                </div>
+                                <div class="day-column">
+                                    Friday
+                                    <div class="workout-slot" data-day="friday">
+                                        <!-- Exercises for Friday will be added here by JS -->
+                                    </div>
+                                </div>
+                                <div class="day-column">
+                                    Saturday
+                                    <div class="workout-slot" data-day="saturday">
+                                        <!-- Exercises for Saturday will be added here by JS -->
+                                    </div>
+                                </div>
+                                <div class="day-column">
+                                    Sunday
+                                    <div class="workout-slot" data-day="sunday">
+                                        <!-- Exercises for Sunday will be added here by JS -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 <!-- Moved calorie-tracker outside planner-container -->
                     <div class="calorie-tracker">
                         <h3>Weekly Calorie Burn</h3>
@@ -616,8 +676,33 @@
                     <label for="prompt-reps">Reps:</label>
                     <input type="number" id="prompt-reps" value="10" min="1">
                 </div>
+                <div class="input-group">
+                    <label for="prompt-weight">Weight (kg):</label>
+                    <input type="number" id="prompt-weight" value="5" min="1">
+                </div>
             </div>
             <button id="confirm-add-exercise-btn" class="btn">Add to Plan</button>
+        </div>
+    </div>
+
+    <!-- Save confirmation modal -->
+    <div id="save-confirmation-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div class="exercise-details">
+                <h2>Save This Week's Workout?</h2>
+                <div class="exercise-info">
+                    <p>This will save your current workout plan to your history. You can only save once per week.</p>
+                    <div class="day-selection-container">
+                        <button id="confirm-save-btn" class="view-details-btn">
+                            <i class="fas fa-save"></i> Yes, Save Workout
+                        </button>
+                        <button id="cancel-save-btn" class="back-btn">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 {% endblock %}

@@ -602,6 +602,11 @@ document.addEventListener('DOMContentLoaded', function () {
     loadWorkoutPlan().catch(error => {
         console.error("Error loading workout plan:", error);
     });
+
+    // Load saved workout data
+    loadSavedWorkout().catch(error => {
+        console.error("Error loading saved workout:", error);
+    });
 });
 
 // Load exercises into the grid
@@ -1123,10 +1128,11 @@ function showSetsRepsPrompt(exercise, day) {
     const exerciseNameEl = document.getElementById('prompt-exercise-name');
     const setsInput = document.getElementById('prompt-sets');
     const repsInput = document.getElementById('prompt-reps');
+    const weightInput = document.getElementById('prompt-weight');
     const confirmBtn = document.getElementById('confirm-add-exercise-btn');
     const closeBtn = promptModal.querySelector('.close-prompt-btn');
 
-    if (!promptModal || !exerciseNameEl || !setsInput || !repsInput || !confirmBtn || !closeBtn) {
+    if (!promptModal || !exerciseNameEl || !setsInput || !repsInput || !weightInput || !confirmBtn || !closeBtn) {
         console.error("Could not find all required elements for the sets/reps prompt.");
         return;
     }
@@ -1136,6 +1142,7 @@ function showSetsRepsPrompt(exercise, day) {
     // Reset to default values
     setsInput.value = 3;
     repsInput.value = 10;
+    weightInput.value = 5;
 
     // Remove previous listener if exists to prevent duplicates
     if (currentPromptHandler) {
@@ -1146,6 +1153,7 @@ function showSetsRepsPrompt(exercise, day) {
     currentPromptHandler = () => {
         const sets = parseInt(setsInput.value, 10);
         const reps = parseInt(repsInput.value, 10);
+        const weight = parseInt(weightInput.value, 10);
 
         if (isNaN(sets) || sets <= 0) {
             alert("Please enter a valid number for sets.");
@@ -1155,8 +1163,12 @@ function showSetsRepsPrompt(exercise, day) {
             alert("Please enter a valid number for reps.");
             return;
         }
+        if (isNaN(weight) || weight <= 0) {
+            alert("Please enter a valid number for weight.");
+            return;
+        }
 
-        addExerciseToDay(exercise, day, sets, reps); // Add with entered sets/reps
+        addExerciseToDay(exercise, day, sets, reps, weight); // Add with entered sets/reps
         promptModal.style.display = 'none'; // Hide prompt after adding
     };
 
@@ -1180,12 +1192,12 @@ function showSetsRepsPrompt(exercise, day) {
 }
 
 // Modified addExerciseToDay to include sets and reps
-function addExerciseToDay(exercise, day, sets, reps) {
+function addExerciseToDay(exercise, day, sets, reps, weight) {
     const lowerCaseDay = day.toLowerCase();
     const slot = document.querySelector(`.workout-slot[data-day="${lowerCaseDay}"]`);
 
             if (slot) {
-        console.log(`[addExerciseToDay] Adding exercise to slot for ${lowerCaseDay}:`, exercise, `Sets: ${sets}, Reps: ${reps}`);
+        console.log(`[addExerciseToDay] Adding exercise to slot for ${lowerCaseDay}:`, exercise, `Sets: ${sets}, Reps: ${reps}, weight: ${weight}`);
                 const exerciseElement = document.createElement('div');
                 exerciseElement.className = 'workout-exercise';
         const caloriesPerSet = Number(exercise.calories) || 0;
@@ -1194,11 +1206,13 @@ function addExerciseToDay(exercise, day, sets, reps) {
         // Store sets, reps and BASE calories per set as data attributes
         exerciseElement.dataset.sets = sets;
         exerciseElement.dataset.reps = reps;
+        exerciseElement.dataset.weight = weight;
         exerciseElement.dataset.caloriesPerSet = caloriesPerSet;
 
                 exerciseElement.innerHTML = `
             <h4 class="exercise-name">${exercise.name}</h4>
             <p class="exercise-sets-reps">${sets} sets x ${reps} reps</p>
+            <p class="exercise-weight">${weight}kg</p>
             <p class="exercise-calories-info">${totalCalories} calories (${caloriesPerSet}/set)</p> <!-- Display total and per set -->
             <button class="remove-exercise-btn">&times;</button>
         `;
@@ -1269,6 +1283,7 @@ async function loadWorkoutPlan() {
                     // Backend now returns sets/reps reliably
                     const sets = parseInt(exercise.sets, 10) || 1; // Default to 1 set if parsing fails
                     const reps = parseInt(exercise.reps, 10) || 1; // Default to 1 rep
+                    const weight = parseInt(exercise.weight, 10) || 5; // Default to 5kg
                     const caloriesPerSet = Number(exercise.calories) || 0;
                     const totalCalories = caloriesPerSet * sets;
 
@@ -1276,11 +1291,13 @@ async function loadWorkoutPlan() {
                     exerciseElement.className = 'workout-exercise';
                     exerciseElement.dataset.sets = sets;
                     exerciseElement.dataset.reps = reps;
+                    exerciseElement.dataset.weight = weight;
                     exerciseElement.dataset.caloriesPerSet = caloriesPerSet;
 
                     exerciseElement.innerHTML = `
                         <h4 class="exercise-name">${exercise.name}</h4>
-                         <p class="exercise-sets-reps">${sets} sets x ${reps} reps</p>
+                        <p class="exercise-sets-reps">${sets} sets x ${reps} reps</p>
+                        <p class="exercise-weight">${weight}kg</p>
                         <p class="exercise-calories-info">${totalCalories} calories (${caloriesPerSet}/set)</p>
                         <button class="remove-exercise-btn">&times;</button>
                     `;
@@ -1345,13 +1362,14 @@ async function saveWorkoutPlan() {
             const caloriesPerSet = exerciseElement.dataset.caloriesPerSet ? parseInt(exerciseElement.dataset.caloriesPerSet, 10) : 0;
             const sets = exerciseElement.dataset.sets ? parseInt(exerciseElement.dataset.sets, 10) : 0;
             const reps = exerciseElement.dataset.reps ? parseInt(exerciseElement.dataset.reps, 10) : 0;
+            const weight = exerciseElement.dataset.weight ? parseInt(exerciseElement.dataset.weight, 10) : 5;
 
 
             if (nameElement && nameElement.textContent.trim()) {
                  const name = nameElement.textContent.trim();
 
                  // Basic validation for numeric values (already parsed or defaulted to 0)
-                 if (Number.isNaN(caloriesPerSet) || Number.isNaN(sets) || Number.isNaN(reps)) {
+                 if (Number.isNaN(caloriesPerSet) || Number.isNaN(sets) || Number.isNaN(reps) || Number.isNaN(weight)) {
                      console.warn(`[saveWorkoutPlan] Invalid numeric data found for ${name} on ${day}. Skipping.`);
                      return; // Skip this exercise if data is invalid
                  }
@@ -1361,9 +1379,10 @@ async function saveWorkoutPlan() {
                      name: name,
                      calories: caloriesPerSet, // Map dataset.caloriesPerSet to 'calories' field for backend
                      sets: sets,
-                     reps: reps
+                     reps: reps,
+                     weight: weight
                  });
-                 console.log(`[saveWorkoutPlan] Extracted for ${day}: Name=${name}, CaloriesPerSet=${caloriesPerSet}, Sets=${sets}, Reps=${reps}`);
+                 console.log(`[saveWorkoutPlan] Extracted for ${day}: Name=${name}, CaloriesPerSet=${caloriesPerSet}, Sets=${sets}, Reps=${reps}, Weight=${weight}`);
              } else {
                 console.warn(`[saveWorkoutPlan] Could not find name or data attributes on element:`, exerciseElement);
             }
@@ -1442,3 +1461,155 @@ async function saveWorkoutPlan() {
         alert(`Failed to save workout plan: ${error.message}`); // Provide feedback to user
     }
 } 
+
+// Add save workout button event listener
+const saveWorkoutBtn = document.getElementById('saveWorkoutBtn');
+if (saveWorkoutBtn) {
+    saveWorkoutBtn.addEventListener('click', handleSaveWorkoutClick);
+}
+
+// Add event listeners for the save confirmation modal
+const saveConfirmationModal = document.getElementById('save-confirmation-modal');
+if (saveConfirmationModal) {
+    // Close modal when clicking the X
+    saveConfirmationModal.querySelector('.close-modal').addEventListener('click', () => {
+        saveConfirmationModal.style.display = 'none';
+    });
+
+    // Close modal when clicking outside
+    window.addEventListener('click', (event) => {
+        if (event.target === saveConfirmationModal) {
+            saveConfirmationModal.style.display = 'none';
+        }
+    });
+
+    // Handle cancel button
+    document.getElementById('cancel-save-btn').addEventListener('click', () => {
+        saveConfirmationModal.style.display = 'none';
+    });
+
+    // Handle confirm button
+    document.getElementById('confirm-save-btn').addEventListener('click', () => {
+        saveConfirmationModal.style.display = 'none';
+        saveWorkout();
+    });
+}
+
+function handleSaveWorkoutClick() {
+    const saveConfirmationModal = document.getElementById('save-confirmation-modal');
+    if (saveConfirmationModal) {
+        saveConfirmationModal.style.display = 'block';
+    }
+}
+
+async function saveWorkout() {
+    try {
+        // Get CSRF token
+        const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
+        const csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : null;
+
+        if (!csrfToken) {
+            console.error("[saveWorkout] CSRF token not found!");
+            alert("Error: Security token missing. Please refresh the page.");
+            return;
+        }
+
+        // Show loading state
+        const saveBtn = document.getElementById('saveWorkoutBtn');
+        const originalText = saveBtn.innerHTML;
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        saveBtn.disabled = true;
+
+        const response = await fetch('/api/save_workout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            }
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || 'Failed to save workout');
+        }
+
+        // Show success message
+        alert('Workout saved successfully!');
+        
+        // Reset button state
+        saveBtn.innerHTML = originalText;
+        saveBtn.disabled = false;
+
+    } catch (error) {
+        console.error('[saveWorkout] Error:', error);
+        alert(error.message || 'Failed to save workout. Please try again.');
+        
+        // Reset button state
+        const saveBtn = document.getElementById('saveWorkoutBtn');
+        saveBtn.innerHTML = '<i class="fas fa-save"></i> Save This Week\'s Workout';
+        saveBtn.disabled = false;
+    }
+}
+
+async function loadSavedWorkout() {
+    try {
+        const response = await fetch("/api/saved_workout");
+        if (!response.ok) {
+            if (response.status === 404) {
+                console.log("[loadWorkoutPlan] No existing plan found on server (404). Initializing empty chart.");
+                const slotsContainer = document.getElementById('saved_workout');
+                if (slotsContainer) {
+                    slotsContainer.querySelectorAll('.workout-slot .workout-exercise').forEach(el => el.remove());
+                }
+                return;
+            }
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const planData = await response.json();
+
+        const slotsContainer = document.getElementById('saved_workout');
+        slotsContainer.querySelectorAll('.workout-slot .workout-exercise').forEach(el => el.remove());
+
+        const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+
+        console.log("[loadWorkoutPlan] Fetched plan data:", planData);
+
+        for (const day in planData) {
+            const lowerCaseDay = day.toLowerCase();
+            if (!days.includes(lowerCaseDay)) continue;
+
+            const dayIndex = days.indexOf(lowerCaseDay);
+            const slot = slotsContainer.querySelector(`.workout-slot[data-day="${lowerCaseDay}"]`);
+
+            if (slot && Array.isArray(planData[day])) {
+                planData[day].forEach(exercise => {
+                    // Backend now returns sets/reps reliably
+                    const sets = parseInt(exercise.sets, 10) || 1; // Default to 1 set if parsing fails
+                    const reps = parseInt(exercise.reps, 10) || 1; // Default to 1 rep
+                    const weight = parseInt(exercise.weight, 10) || 5; // Default to 5kg
+
+                    const exerciseElement = document.createElement('div');
+                    exerciseElement.className = 'workout-exercise';
+                    exerciseElement.dataset.sets = sets;
+                    exerciseElement.dataset.reps = reps;
+                    exerciseElement.dataset.weight = weight;
+                    exerciseElement.innerHTML = `
+                        <h4 class="exercise-name">${exercise.name}</h4>
+                        <p class="exercise-sets-reps">${sets} sets x ${reps} reps</p>
+                        <p class="exercise-weight">${weight}kg</p>
+                    `;
+                    slot.appendChild(exerciseElement);
+                });
+
+            } else if (!Array.isArray(planData[day])) {
+                console.warn(`[loadWorkoutPlan] Data for day '${day}' is not an array:`, planData[day]);
+            } else {
+                 console.warn(`[loadWorkoutPlan] Could not find slot DOM element for day: ${lowerCaseDay}`);
+            }
+        }
+
+    } catch (error) {
+        console.error("Error loading workout plan:", error);
+    }
+}
