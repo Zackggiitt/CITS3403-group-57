@@ -49,24 +49,15 @@ function togglePasswordVisibility() {
     const toggleIcon = document.querySelector('.toggle-password');
 
     if (passwordInput.type === 'password') {
-        passwordInput.type = 'text'; 
-        toggleIcon.classList.remove('fa-eye');  
-        toggleIcon.classList.add('fa-eye-slash'); 
-        passwordInput.style.paddingLeft = '35px'; 
+        passwordInput.type = 'text';
+        toggleIcon.classList.remove('fa-eye');
+        toggleIcon.classList.add('fa-eye-slash');
+        passwordInput.style.paddingLeft = '35px';
     } else {
-        passwordInput.type = 'password'; 
-        toggleIcon.classList.remove('fa-eye-slash'); 
-        toggleIcon.classList.add('fa-eye'); 
+        passwordInput.type = 'password';
+        toggleIcon.classList.remove('fa-eye-slash');
+        toggleIcon.classList.add('fa-eye');
     }
-}
-
-// CTA button functionality
-const ctaButton = document.querySelector('.cta-button');
-if (ctaButton) {
-    ctaButton.addEventListener('click', function () {
-        // Here you would typically redirect to signup or show a modal
-        alert('Get started with FitPal today!');
-    });
 }
 
 // Add animation to feature cards when they come into view
