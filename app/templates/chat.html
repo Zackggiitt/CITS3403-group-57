@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block head %}
+{{ super() }}
+<style>
+    #chat-container {
+        max-width: 600px;
+        margin: 20px auto;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background-color: #f9f9f9;
+    }
+
+    #chat-box {
+        height: 300px;
+        overflow-y: auto;
+        border: 1px solid #ccc;
+        padding: 10px;
+        margin-bottom: 10px;
+        background-color: #fff;
+        border-radius: 4px;
+    }
+
+    .chat-message {
+        padding: 8px;
+        margin-bottom: 8px;
+        border-radius: 4px;
+    }
+
+    .user-message {
+        background-color: #e1f5fe;
+        text-align: right;
+        margin-left: auto;
+        max-width: 80%;
+    }
+
+    .ai-message {
+        background-color: #f0f0f0;
+        text-align: left;
+        margin-right: auto;
+        max-width: 80%;
+    }
+
+    #user-input {
+        width: calc(100% - 80px);
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        margin-right: 5px;
+    }
+
+    #send-button {
+        width: 70px;
+        padding: 10px;
+        border: none;
+        background-color: #007bff;
+        color: white;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    #send-button:hover {
+        background-color: #0056b3;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="chat-container">
+    <h2>FitPal AI Assistant</h2>
+    <div id="chat-box">
+        <div class="chat-message ai-message">
+            Hello! How can I help you with your fitness goals today?
+        </div>
+    </div>
+    <input id="user-input" type="text" placeholder="Ask something..." />
+    <button id="send-button" onclick="sendMessage()">Send</button>
+</div>
+
+<script>
+    async function sendMessage() {
+        const userInput = document.getElementById("user-input");
+        const message = userInput.value.trim();
+        if (!message) return;
+
+        const chatBox = document.getElementById("chat-box");
+
+        // Display user message
+        const userMessageDiv = document.createElement("div");
+        userMessageDiv.classList.add("chat-message", "user-message");
+        userMessageDiv.textContent = message;
+        chatBox.appendChild(userMessageDiv);
+        userInput.value = ""; // Clear input
+        chatBox.scrollTop = chatBox.scrollHeight; // Scroll to bottom
+
+        // Send to backend and display AI reply
+        try {
+            const response = await fetch("{{ url_for('chat') }}", {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken // Assuming csrfToken is globally available from base.html
+                },
+                body: JSON.stringify({ message: message })
+            });
+            const data = await response.json();
+
+            const aiMessageDiv = document.createElement("div");
+            aiMessageDiv.classList.add("chat-message", "ai-message");
+            aiMessageDiv.textContent = data.reply || data.error || "Sorry, I couldn't get a response.";
+            chatBox.appendChild(aiMessageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight; // Scroll to bottom
+
+        } catch (error) {
+            console.error("Error sending message:", error);
+            const errorMessageDiv = document.createElement("div");
+            errorMessageDiv.classList.add("chat-message", "ai-message");
+            errorMessageDiv.textContent = "Error connecting to the AI. Please try again.";
+            chatBox.appendChild(errorMessageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+    }
+
+    // Allow sending message with Enter key
+    document.getElementById("user-input").addEventListener("keypress", function (event) {
+        if (event.key === "Enter") {
+            event.preventDefault(); // Prevent default action (form submission if it were a form)
+            sendMessage();
+        }
+    });
+</script>
+{% endblock %}

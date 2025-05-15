@@ -18,3 +18,6 @@ class Config:
     INSTANCE_FOLDER_PATH = os.path.join(basedir, 'app', 'instance')
     if not os.path.exists(INSTANCE_FOLDER_PATH):
         os.makedirs(INSTANCE_FOLDER_PATH)
+    
+    # OpenAI API Key
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")

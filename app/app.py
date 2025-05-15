@@ -15,6 +15,8 @@ from sqlalchemy.sql import func
 import json
 from datetime import datetime, timezone, timedelta
 
+import openai # Added for chatbot
+
 # Load environment variables from .env file
 load_dotenv()
 
@@ -34,6 +36,9 @@ csrf = CSRFProtect(app)
 # Use environment variable or default to 'config.Config'
 app.config.from_object(os.environ.get('APP_SETTINGS', 'config.Config'))
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# OpenAI API Key Setup
+openai.api_key = app.config.get("OPENAI_API_KEY")
 
 # Initialize database and migration tool
 db = SQLAlchemy(app)
@@ -61,6 +66,11 @@ def load_user(user_id):
 @app.route("/")
 def index():
     return render_template("index.html", title='Home')
+
+@app.route("/chat_page") # Route for displaying the chat page
+@login_required # Optional: if you want chat page to be login protected
+def chat_page():
+    return render_template("chat.html", title="Chat with FitPal AI")
 
 # Define route for the login page
 @app.route("/login", methods=["GET", "POST"])
@@ -601,7 +611,32 @@ def share_plan(): # Renamed function
 def logout():
     logout_user() # Log the user out
     flash("You have been logged out.")
-    return redirect(url_for('index')) # Redirect to login page after logout
+    return redirect(url_for("login"))
+
+@app.route('/chat', methods=['POST'])
+@login_required # Optional: Make chatbot only available to logged-in users
+def chat():
+    user_message = request.json.get('message', '')
+    if not user_message:
+        return jsonify({'error': 'No message provided'}), 400
+
+    if not openai.api_key:
+        current_app.logger.error("OpenAI API key is not set.")
+        return jsonify({'error': 'AI service not configured.'}), 500
+
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",  # or gpt-4
+            messages=[
+                {"role": "system", "content": "You are a helpful fitness assistant for FitPal. Be concise and encouraging."},
+                {"role": "user", "content": user_message}
+            ]
+        )
+        ai_reply = response['choices'][0]['message']['content']
+        return jsonify({'reply': ai_reply})
+    except Exception as e:
+        current_app.logger.error(f"OpenAI API call failed: {e}")
+        return jsonify({'error': str(e)}), 500
 
 # Run the application in debug mode if this file is executed directly
 if __name__ == "__main__":
