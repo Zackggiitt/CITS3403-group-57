@@ -1514,6 +1514,10 @@ async function saveWorkout() {
             return;
         }
 
+        // Get week offset from the week-select dropdown
+        const weekSelect = document.getElementById('week-select');
+        const weekOffset = weekSelect ? parseInt(weekSelect.value, 10) : 0;
+
         // Show loading state
         const saveBtn = document.getElementById('saveWorkoutBtn');
         const originalText = saveBtn.innerHTML;
@@ -1525,7 +1529,10 @@ async function saveWorkout() {
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': csrfToken
-            }
+            },
+            body: JSON.stringify({
+                week_offset: weekOffset
+            })
         });
 
         const result = await response.json();

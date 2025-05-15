@@ -425,6 +425,16 @@
                     </button>
                 </div>
                 
+                <!-- Week selector -->
+                <label for="week-select">Save for:</label>
+                <select id="week-select">
+                <option value="0">This week</option>
+                <option value="1">Last week</option>
+                <option value="2">2 weeks ago</option>
+                <option value="3">3 weeks ago</option>
+                <option value="4">4 weeks ago</option>
+                </select>
+
                 <!-- Saved workout section -->
                 <section class="saved-workout">
                     <h2>This Week's Saved Workout</h2>
@@ -483,7 +493,8 @@
                     <div class="chart-container">
                         <canvas id="calorieChart"></canvas>
                     </div>
-                </div>
+                </section>
+            </section>
         </section>
 
         <!-- BMI Calculator Section -->
@@ -692,7 +703,7 @@
             <div class="exercise-details">
                 <h2>Save This Week's Workout?</h2>
                 <div class="exercise-info">
-                    <p>This will save your current workout plan to your history. You can only save once per week.</p>
+                    <p>This will save your current workout plan to your history. If you previously saved a workout for this week, it will be replaced.</p>
                     <div class="day-selection-container">
                         <button id="confirm-save-btn" class="view-details-btn">
                             <i class="fas fa-save"></i> Yes, Save Workout

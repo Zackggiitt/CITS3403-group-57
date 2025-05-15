@@ -497,23 +497,23 @@ def save_workout():
         if not current_plan:
             return jsonify({"error": "No workout plan found to save"}), 400
 
+        data = request.get_json()
+        week_offset = int(data.get('week_offset', 0))
+
         # Get current datetime
         now = datetime.now(timezone.utc)
 
         # Calculate the start of the current week (assuming week starts on Monday)
-        start_of_week = now - timedelta(days=now.weekday())
+        start_of_week = now - timedelta(days=now.weekday(), weeks=week_offset)
         start_of_week = start_of_week.replace(hour=0, minute=0, second=0, microsecond=0)
 
-        # Query for saved workouts since the beginning of the week
-        recent_saved = models.SavedWorkouts.query.filter(
+        # Delete any saved workouts since the beginning of the week
+        models.SavedWorkouts.query.filter(
             models.SavedWorkouts.user_id == current_user.id,
-            models.SavedWorkouts.save_date >= start_of_week
-        ).first()
-
-        if recent_saved:
-            return jsonify({
-                "error": "You have already saved a workout this week. Please wait until next week to save again."
-            }), 400
+            models.SavedWorkouts.save_date >= start_of_week,
+            models.SavedWorkouts.save_date < start_of_week + timedelta(weeks=1)
+        ).delete()
+        db.session.commit()
 
         # Create new saved workout entries
         new_saved_workouts = []
@@ -525,8 +525,8 @@ def save_workout():
                 calories_per_set=workout.calories_per_set,
                 sets=workout.sets,
                 reps=workout.reps,
-                weight=workout.weight
-                # save_date will be automatically set by the default to maintain data integrity
+                weight=workout.weight,
+                save_date=start_of_week
             )
             new_saved_workouts.append(saved_workout)
 
