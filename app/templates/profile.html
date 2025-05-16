@@ -42,13 +42,6 @@
                 <h3>Volume per Workout</h3>
                 <canvas id="volumeProgressChart"></canvas>
             </div>
-            <div class="chart-container weekly-calories-chart-container">
-                <div class="weekly-calorie-title">Weekly Calorie Burn</div>
-                <div id="weekly-calories-total"
-                    style="font-size: 1.5em; font-weight: bold; margin-bottom: 8px; color: #4CAF50; text-align: center;">
-                    Total: <span id="weeklyCaloriesValue">0</span> cal</div>
-                <canvas id="caloriesChart"></canvas>
-            </div>
         </div>
     </div>
 
@@ -168,128 +161,7 @@
     // Call this function when the page loads
     document.addEventListener('DOMContentLoaded', function () {
         loadWorkoutHistory();
-        loadWeeklyCaloriesChart();
     });
-
-    function loadWeeklyCaloriesChart() {
-        fetch('/api/weekly_calories')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.error) {
-                    console.error("Error from API:", data.error, data.details || '');
-                    return;
-                }
-                // Calculate weekly total
-                const weeklyTotal = data.calories.reduce((a, b) => a + b, 0);
-                document.getElementById('weeklyCaloriesValue').textContent = weeklyTotal;
-                const caloriesChartCtx = document.getElementById('caloriesChart').getContext('2d');
-                new Chart(caloriesChartCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: data.labels,
-                        datasets: [{
-                            label: 'Calories Burned',
-                            data: data.calories,
-                            backgroundColor: '#4CAF50',
-                            borderColor: '#4CAF50',
-                            borderWidth: 0,
-                            borderRadius: 10,
-                            barThickness: 50,
-                            maxBarThickness: 70
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: true,
-                                position: 'top',
-                                labels: {
-                                    color: '#222',
-                                    font: {
-                                        size: 18,
-                                        weight: 'bold'
-                                    },
-                                    usePointStyle: true,
-                                    pointStyle: 'rectRounded',
-                                    boxWidth: 30,
-                                    boxHeight: 18,
-                                    padding: 20
-                                }
-                            },
-                            title: {
-                                display: false // Title is handled by HTML above
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function (context) {
-                                        return `${context.parsed.y} cal`;
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                title: {
-                                    display: true,
-                                    text: 'Calories',
-                                    color: '#666',
-                                    font: {
-                                        size: 18,
-                                        weight: 'bold'
-                                    }
-                                },
-                                ticks: {
-                                    color: '#444',
-                                    font: {
-                                        size: 16,
-                                        weight: 'bold'
-                                    },
-                                    callback: function (value) {
-                                        return value + ' cal';
-                                    }
-                                },
-                                grid: {
-                                    color: '#eee',
-                                    drawBorder: false
-                                }
-                            },
-                            x: {
-                                title: {
-                                    display: true,
-                                    text: 'Day of the Week',
-                                    color: '#666',
-                                    font: {
-                                        size: 16,
-                                        weight: 'bold'
-                                    }
-                                },
-                                ticks: {
-                                    color: '#444',
-                                    font: {
-                                        size: 16,
-                                        weight: 'bold'
-                                    }
-                                },
-                                grid: {
-                                    display: false
-                                }
-                            }
-                        }
-                    }
-                });
-            })
-            .catch(error => {
-                console.error("Error fetching weekly calories data:", error);
-            });
-    }
 </script>
 <style>
     /* Style for the green chart title */

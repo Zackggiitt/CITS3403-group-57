@@ -8,7 +8,7 @@ load_dotenv(os.path.join(basedir, '.env'))
 
 class Config:
     # Load SECRET_KEY from environment variables, provide a default for safety (but don't rely on it in production)
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
+    SECRET_KEY = os.environ.get('SECRET_KEY')
     # Load database URI from environment variables or set a default SQLite path in the instance folder
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
         'sqlite:///' + os.path.join(basedir, 'app', 'instance', 'app.db') # Default also points to instance folder

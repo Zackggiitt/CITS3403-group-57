@@ -1,4 +1,4 @@
-from app.app import db # Import the db instance from app.py
+from app import db # Import the db instance from app.py
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timezone # Import datetime for timestamping
 from flask_login import UserMixin # Import UserMixin
