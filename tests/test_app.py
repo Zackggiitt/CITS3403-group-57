@@ -1,5 +1,5 @@
 import unittest
-from app.app import create_app, db
+from app import create_app, db
 from config import TestingConfig
 from app.models import User, WorkoutPlan, SharedPlan
 from werkzeug.security import generate_password_hash
