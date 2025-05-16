@@ -43,7 +43,10 @@
                 <canvas id="volumeProgressChart"></canvas>
             </div>
             <div class="chart-container weekly-calories-chart-container">
-                <h3>Weekly Calories Burned</h3>
+                <div class="weekly-calorie-title">Weekly Calorie Burn</div>
+                <div id="weekly-calories-total"
+                    style="font-size: 1.5em; font-weight: bold; margin-bottom: 8px; color: #4CAF50; text-align: center;">
+                    Total: <span id="weeklyCaloriesValue">0</span> cal</div>
                 <canvas id="caloriesChart"></canvas>
             </div>
         </div>
@@ -179,22 +182,25 @@
             .then(data => {
                 if (data.error) {
                     console.error("Error from API:", data.error, data.details || '');
-                    // Optionally display an error message on the page
-                    const caloriesChartCtx = document.getElementById('caloriesChart').getContext('2d');
-                    // Could display a message on the canvas or nearby element
                     return;
                 }
+                // Calculate weekly total
+                const weeklyTotal = data.calories.reduce((a, b) => a + b, 0);
+                document.getElementById('weeklyCaloriesValue').textContent = weeklyTotal;
                 const caloriesChartCtx = document.getElementById('caloriesChart').getContext('2d');
                 new Chart(caloriesChartCtx, {
-                    type: 'bar', // Bar chart for daily calories
+                    type: 'bar',
                     data: {
-                        labels: data.labels, // Should be day names like ['Mon', 'Tue', ...]
+                        labels: data.labels,
                         datasets: [{
                             label: 'Calories Burned',
-                            data: data.calories, // Should be calorie values [1500, 1200, ...]
-                            backgroundColor: 'rgba(255, 159, 64, 0.5)', // Orange color
-                            borderColor: 'rgba(255, 159, 64, 1)',
-                            borderWidth: 1
+                            data: data.calories,
+                            backgroundColor: '#4CAF50',
+                            borderColor: '#4CAF50',
+                            borderWidth: 0,
+                            borderRadius: 10,
+                            barThickness: 50,
+                            maxBarThickness: 70
                         }]
                     },
                     options: {
@@ -202,11 +208,30 @@
                         maintainAspectRatio: false,
                         plugins: {
                             legend: {
+                                display: true,
                                 position: 'top',
+                                labels: {
+                                    color: '#222',
+                                    font: {
+                                        size: 18,
+                                        weight: 'bold'
+                                    },
+                                    usePointStyle: true,
+                                    pointStyle: 'rectRounded',
+                                    boxWidth: 30,
+                                    boxHeight: 18,
+                                    padding: 20
+                                }
                             },
                             title: {
-                                display: true,
-                                text: 'Daily Calories Burned This Week'
+                                display: false // Title is handled by HTML above
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function (context) {
+                                        return `${context.parsed.y} cal`;
+                                    }
+                                }
                             }
                         },
                         scales: {
@@ -214,13 +239,47 @@
                                 beginAtZero: true,
                                 title: {
                                     display: true,
-                                    text: 'Calories (kcal)'
+                                    text: 'Calories',
+                                    color: '#666',
+                                    font: {
+                                        size: 18,
+                                        weight: 'bold'
+                                    }
+                                },
+                                ticks: {
+                                    color: '#444',
+                                    font: {
+                                        size: 16,
+                                        weight: 'bold'
+                                    },
+                                    callback: function (value) {
+                                        return value + ' cal';
+                                    }
+                                },
+                                grid: {
+                                    color: '#eee',
+                                    drawBorder: false
                                 }
                             },
                             x: {
                                 title: {
                                     display: true,
-                                    text: 'Day of the Week'
+                                    text: 'Day of the Week',
+                                    color: '#666',
+                                    font: {
+                                        size: 16,
+                                        weight: 'bold'
+                                    }
+                                },
+                                ticks: {
+                                    color: '#444',
+                                    font: {
+                                        size: 16,
+                                        weight: 'bold'
+                                    }
+                                },
+                                grid: {
+                                    display: false
                                 }
                             }
                         }
@@ -229,8 +288,29 @@
             })
             .catch(error => {
                 console.error("Error fetching weekly calories data:", error);
-                // Optionally display an error message on the page
             });
     }
 </script>
+<style>
+    /* Style for the green chart title */
+    .weekly-calorie-title {
+        color: #4CAF50;
+        font-size: 2.2em;
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 0.5em;
+    }
+
+    /* Make the calories chart more compact */
+    .weekly-calories-chart-container {
+        max-width: 600px;
+        margin: 0 auto;
+        height: 340px;
+    }
+
+    #caloriesChart {
+        height: 260px !important;
+        max-height: 260px !important;
+    }
+</style>
 {% endblock %}
