@@ -4,6 +4,8 @@ import time
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from app.app import create_app, db
 from config import TestingConfig
 from app.models import User
@@ -52,7 +54,7 @@ class SeleniumTestCase(unittest.TestCase):
             cls.driver.quit()
         
         if cls.app_context:
-            # db.session.remove() # Ensure session is clean before dropping
+            db.session.remove() # Ensure session is clean before dropping
             db.drop_all()       # Drop all tables ONCE for the class
             cls.app_context.pop()
 
@@ -79,6 +81,8 @@ class SeleniumTestCase(unittest.TestCase):
 
         if self.driver:
              self.driver.delete_all_cookies()
+             self.driver.get("about:blank") # Navigate to a blank page first
+             time.sleep(0.1) # Short pause to ensure blank page is loaded if needed
              self.driver.get(self.base_url + "login")
 
     def tearDown(self):
@@ -102,6 +106,37 @@ class SeleniumTestCase(unittest.TestCase):
         password_input = self.driver.find_element(By.NAME, "password")
         self.assertIsNotNone(email_input)
         self.assertIsNotNone(password_input)
+
+    # NEW TEST: Successful login
+    def test_successful_login(self):
+        self.driver.get(self.base_url + "login")
+        print(f"[SELENIUM_DEBUG] Navigated to: {self.driver.current_url}, Title: {self.driver.title}")
+
+        email_field = self.driver.find_element(By.NAME, "email")
+        password_field = self.driver.find_element(By.NAME, "password")
+        submit_button = self.driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
+
+        email_field.send_keys("alice@example.com")
+        password_field.send_keys("password")
+        print(f"[SELENIUM_DEBUG] Credentials entered.")
+        submit_button.click()
+        print(f"[SELENIUM_DEBUG] Submit button clicked.")
+
+        try:
+            # Wait for the URL to change to /profile (or contain /profile)
+            WebDriverWait(self.driver, 10).until(
+                EC.url_contains("/profile")
+            )
+            print(f"[SELENIUM_DEBUG] Redirected to: {self.driver.current_url}, Title: {self.driver.title}")
+            # Assert that the title of the page is Profile, indicating successful login and redirect
+            self.assertIn("Profile", self.driver.title, "Login failed or did not redirect to profile page title.")
+            self.assertTrue(self.driver.current_url.endswith("/profile"), "URL did not end with /profile")
+        except Exception as e:
+            print(f"[SELENIUM_DEBUG] Exception after login attempt: {e}")
+            print(f"[SELENIUM_DEBUG] Current URL: {self.driver.current_url}")
+            print(f"[SELENIUM_DEBUG] Current Title: {self.driver.title}")
+            print(f"[SELENIUM_DEBUG] Page Source (first 500 chars): {self.driver.page_source[:500]}")
+            self.fail(f"Login failed. Current URL: {self.driver.current_url}, Title: {self.driver.title}. Exception: {e}")
 
     # 5. Failed login (wrong password)
     def test_failed_login_wrong_password(self):
@@ -145,35 +180,137 @@ class SeleniumTestCase(unittest.TestCase):
     # 13. Login with second user
     def test_login_second_user(self):
         self.driver.get(self.base_url + "login")
-        self.driver.find_element(By.NAME, "email").send_keys("bob@example.com")
-        self.driver.find_element(By.NAME, "password").send_keys("password")
-        self.driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
-        time.sleep(1)
-        self.assertIn("Profile", self.driver.title) # This might also fail if login is generally broken
+        email_field = self.driver.find_element(By.NAME, "email")
+        password_field = self.driver.find_element(By.NAME, "password")
+        submit_button = self.driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
+
+        email_field.send_keys("bob@example.com")
+        password_field.send_keys("password")
+        submit_button.click()
+
+        try:
+            WebDriverWait(self.driver, 10).until(
+                EC.url_contains("/profile")
+            )
+            # Assert that the title of the page is Profile, indicating successful login and redirect
+            self.assertIn("Profile", self.driver.title, "Login with Bob failed or did not redirect to profile page title.")
+            self.assertTrue(self.driver.current_url.endswith("/profile"), "URL (Bob login) did not end with /profile")
+        except Exception as e:
+            # Adding more debug info similar to test_successful_login
+            print(f"[SELENIUM_DEBUG] Exception during Bob login: {e}")
+            print(f"[SELENIUM_DEBUG] Current URL (Bob login): {self.driver.current_url}")
+            print(f"[SELENIUM_DEBUG] Current Title (Bob login): {self.driver.title}")
+            print(f"[SELENIUM_DEBUG] Page Source (Bob login) (first 500 chars): {self.driver.page_source[:500]}")
+            self.fail(f"Login with Bob failed. Current URL: {self.driver.current_url}, Title: {self.driver.title}. Exception: {e}")
 
     # 14. Check logout
     def test_logout(self):
-        # This test first needs a successful login.
-        # For now, we'll assume it might pass if a user *could* log in.
-        # Log in user first
+        # 1. Log in user (Alice)
         self.driver.get(self.base_url + "login")
-        self.driver.find_element(By.NAME, "email").send_keys("alice@example.com")
-        self.driver.find_element(By.NAME, "password").send_keys("password")
-        self.driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
-        time.sleep(1) 
+        email_field = self.driver.find_element(By.NAME, "email")
+        password_field = self.driver.find_element(By.NAME, "password")
+        submit_button = self.driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
 
-        # Check if login was successful before attempting logout
-        # If not on profile page, skip logout part as login failed
-        if "Profile" not in self.driver.title:
-             self.skipTest("Skipping logout test as login was not successful.")
+        email_field.send_keys("alice@example.com")
+        password_field.send_keys("password")
+        submit_button.click()
 
+        # 2. Wait for successful login and redirect to profile page
         try:
-            logout_link = self.driver.find_element(By.LINK_TEXT, "Logout")
-            logout_link.click()
-            time.sleep(1) # Wait for redirect
-            self.assertIn("Login", self.driver.title)
+            WebDriverWait(self.driver, 10).until(
+                EC.url_contains("/profile")
+            )
+            # Optional: Check title as well if desired
+            # self.assertIn("Profile", self.driver.title, "Login failed or did not redirect to profile page before logout attempt.")
         except Exception as e:
-            self.skipTest(f"Logout link not found or error during logout: {e}")
+            self.fail(f"Login as Alice failed before logout attempt. Current URL: {self.driver.current_url}, Title: {self.driver.title}. Exception: {e}")
+
+        # 3. Find and click the logout link
+        try:
+            # Assuming logout link is identifiable by its text or a more specific selector
+            # If the link text/selector changes, this needs to be updated.
+            logout_link = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.LINK_TEXT, "Logout"))
+            )
+            logout_link.click()
+        except Exception as e:
+            self.fail(f"Logout link not found or could not be clicked. Exception: {e}")
+
+        # 4. Wait for successful logout and redirect to login page
+        try:
+            WebDriverWait(self.driver, 10).until(
+                EC.url_contains("/login") # After logout, should be back to login page
+            )
+            self.assertIn("Login", self.driver.title, "Logout failed or did not redirect to login page.")
+            # Ensure we are on the login page URL, not just a page with "Login" in title that might be an error page
+            self.assertTrue(self.driver.current_url.endswith("/login"), "After logout, URL did not end with /login")
+        except Exception as e:
+            self.fail(f"Redirection to login page after logout failed. Current URL: {self.driver.current_url}, Title: {self.driver.title}. Exception: {e}")
+
+    # Test for accessing profile page after login
+    def test_profile_page_after_login(self):
+        # 1. Log in user (Alice)
+        self.driver.get(self.base_url + "login")
+        email_field = self.driver.find_element(By.NAME, "email")
+        password_field = self.driver.find_element(By.NAME, "password")
+        submit_button = self.driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
+
+        email_field.send_keys("alice@example.com")
+        password_field.send_keys("password")
+        submit_button.click()
+
+        # 2. Wait for successful login and redirect to profile page
+        try:
+            WebDriverWait(self.driver, 10).until(
+                EC.url_contains("/profile")
+            )
+            self.assertIn("Profile", self.driver.title, "Did not redirect to profile page title after login.")
+            self.assertTrue(self.driver.current_url.endswith("/profile"), "URL did not end with /profile after login.")
+        except Exception as e:
+            self.fail(f"Login as Alice failed when testing profile page access. Current URL: {self.driver.current_url}, Title: {self.driver.title}. Exception: {e}")
+        
+        # 3. Verify profile page content (e.g., user's name)
+        # This assumes the user's first name is displayed on the profile page.
+        # Adjust the selector and text if necessary based on your app's HTML structure.
+        try:
+            # Example: Wait for an element that contains the user's first name "Alice"
+            # This is a placeholder; a more specific selector (e.g., by ID or class) is better.
+            user_name_element = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.XPATH, "//*[contains(text(), 'Alice')]")) 
+            )
+            self.assertIn("Alice", user_name_element.text, "User's first name not found on profile page.")
+            # You might also want to check for last name or email if they are displayed.
+        except Exception as e:
+            self.fail(f"Failed to verify content on profile page for Alice. Exception: {e}\nPage Source (first 500 chars): {self.driver.page_source[:500]}")
+
+    # Test for accessing tools page after login
+    def test_tools_page_after_login(self):
+        # 1. Log in user (Alice)
+        self.driver.get(self.base_url + "login")
+        email_field = self.driver.find_element(By.NAME, "email")
+        password_field = self.driver.find_element(By.NAME, "password")
+        submit_button = self.driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
+
+        email_field.send_keys("alice@example.com")
+        password_field.send_keys("password")
+        submit_button.click()
+
+        # 2. Wait for successful login (redirects to profile first by default)
+        try:
+            WebDriverWait(self.driver, 10).until(EC.url_contains("/profile"))
+        except Exception as e:
+            self.fail(f"Login as Alice failed before attempting to navigate to tools page. Current URL: {self.driver.current_url}, Title: {self.driver.title}. Exception: {e}")
+
+        # 3. Navigate to the tools page
+        self.driver.get(self.base_url + "tools")
+
+        # 4. Wait for the tools page to load and verify
+        try:
+            WebDriverWait(self.driver, 10).until(EC.url_contains("/tools"))
+            self.assertIn("Tools", self.driver.title, "Did not navigate to tools page title after login.")
+            self.assertTrue(self.driver.current_url.endswith("/tools"), "URL did not end with /tools after navigation.")
+        except Exception as e:
+            self.fail(f"Failed to access or verify tools page after login. Current URL: {self.driver.current_url}, Title: {self.driver.title}. Exception: {e}")
 
 if __name__ == "__main__":
     unittest.main()

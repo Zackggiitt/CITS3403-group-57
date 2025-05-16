@@ -976,9 +976,12 @@ footer {
 }
 
 .chart-container {
-    background: #f8f8f8;
-    padding: 1.5rem;
+    background-color: var(--white);
+    padding: 20px;
     border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    height: 350px;
+    position: relative;
 }
 
 .chart-container h3 {
