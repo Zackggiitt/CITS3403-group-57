@@ -547,6 +547,84 @@ def save_workout():
         current_app.logger.error(f"Error saving workout: {e}")
         return jsonify({"error": "Failed to save workout", "details": str(e)}), 500
 
+@app.route("/api/shared_workout_history/<int:user_id>", methods=['GET'])
+@login_required
+def get_shared_workout_history(user_id):
+    """Fetches the workout history for a shared user"""
+    try:
+        # Verify that the current user has permission to view this user's data
+        shared_plan = models.SharedPlan.query.filter_by(
+            sharer_id=user_id,
+            recipient_id=current_user.id
+        ).first()
+        
+        if not shared_plan:
+            return jsonify({"error": "You don't have permission to view this user's workout history"}), 403
+
+        # Get the last 5 weeks of saved workouts for the shared user
+        five_weeks_ago = datetime.now(timezone.utc) - timedelta(weeks=5)
+        
+        # Query saved workouts, ordered by date
+        saved_workouts = models.SavedWorkouts.query.filter(
+            models.SavedWorkouts.user_id == user_id,
+            models.SavedWorkouts.save_date >= five_weeks_ago
+        ).order_by(models.SavedWorkouts.save_date).all()
+        
+        # Count exercise frequency
+        exercise_counts = {}
+        for workout in saved_workouts:
+            exercise_name = workout.exercise_name.lower()
+            exercise_counts[exercise_name] = exercise_counts.get(exercise_name, 0) + 1
+        
+        # Get top 3 exercises
+        top_exercises = sorted(exercise_counts.items(), key=lambda x: x[1], reverse=True)[:3]
+        top_exercise_names = [exercise[0] for exercise in top_exercises]
+        
+        # Organize data by week
+        weekly_data = {}
+        for workout in saved_workouts:
+            # Get the start of the week (Monday) for this workout
+            workout_date = workout.save_date
+            week_start = workout_date - timedelta(days=workout_date.weekday())
+            week_key = week_start.strftime('%b %d')  # e.g., 'Jan 15'
+            
+            if week_key not in weekly_data:
+                weekly_data[week_key] = {
+                    'total_volume': 0
+                }
+                # Initialize data for each top exercise
+                for exercise in top_exercise_names:
+                    weekly_data[week_key][exercise] = []
+            
+            # Calculate volume for this exercise
+            volume = workout.sets * workout.reps * workout.weight
+            
+            # Add to total volume
+            weekly_data[week_key]['total_volume'] += volume
+            
+            # Add to specific exercise if it's one of the top exercises
+            exercise_name = workout.exercise_name.lower()
+            if exercise_name in top_exercise_names:
+                weekly_data[week_key][exercise_name].append(workout.weight)
+        
+        # Calculate averages for each exercise
+        for week in weekly_data:
+            for exercise in top_exercise_names:
+                weights = weekly_data[week][exercise]
+                weekly_data[week][exercise] = sum(weights) / len(weights) if weights else 0
+        
+        # Add the top exercise names to the response
+        response_data = {
+            'weekly_data': weekly_data,
+            'top_exercises': top_exercise_names
+        }
+        
+        return jsonify(response_data), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Error fetching shared workout history: {e}")
+        return jsonify({"error": "Failed to retrieve shared workout history"}), 500
+
 @app.route("/api/share_plan", methods=['POST'])
 @login_required 
 def share_plan(): # Renamed function
