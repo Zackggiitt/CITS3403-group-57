@@ -102,23 +102,40 @@ def login():
     error = None
 
     if request.method == "POST":
-        email = request.form.get('email', '').strip()
+        email = request.form.get('email', '').strip() # Still useful to get raw values for direct checks
         password = request.form.get('password', '').strip()
         
         if not email or not password:
             error = "Email and password are required."
-        elif form.validate_on_submit():
-            # Query the database for the user
+        else:
+            # Prioritize direct user and password check as it seemed to work in the debug version
             user = models.User.query.filter_by(email=email).first()
-            # Verify hashed password
-            if user and check_password_hash(user.password_hash, password):
-                login_user(user)
-                flash('Logged in successfully.')
-                next_page = request.args.get('next')
-                return redirect(next_page or url_for("main.profile"))
-            else:
+            
+            if user and user.check_password(password):
+                # If direct check is successful, then check WTForms validation 
+                # This was the flow in the version that passed the test
+                if form.validate_on_submit(): 
+                    login_user(user)
+                    flash('Logged in successfully.')
+                    next_page = request.args.get('next')
+                    return redirect(next_page or url_for("main.profile"))
+                else:
+                    # This case is tricky: password is correct, but form validation failed.
+                    # This might indicate an issue with how form data is populated or other validators.
+                    # For now, treat as a login failure, but ideally log form.errors.
+                    error = "Login failed due to form validation issues after credential check."
+                    # Consider logging form.errors here for server-side diagnostics
+                    # current_app.logger.warning(f"Login form validation failed for {email} even after successful credential check. Errors: {form.errors}")
+            else: # User not found or password incorrect
                 error = "Invalid email or password."
-    
+            
+            # If we reached here after checking user/password but didn't redirect, 
+            # it implies either user/password was wrong, or form validation failed after correct user/password.
+            # If form.validate_on_submit() was the primary check and it failed, this block wouldn't be distinct.
+            # The 'else' for 'if not email or not password' covers this.
+            # The final 'else' for 'if user and user.check_password(password)' handles incorrect credentials.
+            # The new 'else' for 'if form.validate_on_submit()' inside correct credentials handles that specific failure.
+
     return render_template("login.html", form=form, title="Login", error=error)
 
 # Define route for the signup page
