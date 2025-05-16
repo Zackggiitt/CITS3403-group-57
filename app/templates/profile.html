@@ -1,144 +1,212 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <!-- Profile Section -->
-    <section class="profile-container">
-        <div class="profile-header">
-            <div class="profile-picture-container">
-                <img src="https://ui-avatars.com/api/?name={{ current_user.first_name }}+{{ current_user.last_name }}&background=4CAF50&color=fff&size=150" alt="Profile Picture" class="profile-picture">
-            </div>
-            <h1 class="profile-name">{{ current_user.first_name }} {{ current_user.last_name }}</h1>
-            <p class="profile-bio">{{ current_user.bio or "Edit your profile to add a bio!" }}</p>
+<!-- Profile Section -->
+<section class="profile-container">
+    <div class="profile-header">
+        <div class="profile-picture-container">
+            <img src="https://ui-avatars.com/api/?name={{ current_user.first_name }}+{{ current_user.last_name }}&background=4CAF50&color=fff&size=150"
+                alt="Profile Picture" class="profile-picture">
         </div>
+        <h1 class="profile-name">{{ current_user.first_name }} {{ current_user.last_name }}</h1>
+        <p class="profile-bio">{{ current_user.bio or "Edit your profile to add a bio!" }}</p>
+    </div>
 
-        <div class="stats-container">
-            <div class="stats-grid">
-                <div class="stat-item">
-                    <i class="fas fa-fire"></i>
-                    <h3>BMR</h3>
-                    <p class="stat-number">{{ current_user.bmr or '0' }}</p>
-                    <p class="stat-category">kcal/day</p>
-                </div>
-                <div class="stat-item">
-                    <i class="fas fa-dumbbell"></i>
-                    <h3>Total Volume</h3>
-                    <p class="stat-number">{{ "{:,}".format(total_volume) }}</p>
-                    <p class="stat-category">kg</p>
-                </div>
-                <div class="stat-item">
-                    <i class="fas fa-chart-line"></i>
-                    <h3>Workouts</h3>
-                    <p class="stat-number">{{ "{:,}".format(total_workouts) }}</p>
-                    <p class="stat-category">sessions</p>
-                </div>
+    <div class="stats-container">
+        <div class="stats-grid">
+            <div class="stat-item">
+                <i class="fas fa-fire"></i>
+                <h3>BMR</h3>
+                <p class="stat-number">{{ current_user.bmr or '0' }}</p>
+                <p class="stat-category">kcal/day</p>
             </div>
-            <div class="stats-charts">
-                <div class="chart-container">
-                    <h3>Lift Progress</h3>
-                    <canvas id="liftProgressChart"></canvas>
-                </div>
-                <div class="chart-container">
-                    <h3>Volume per Workout</h3>
-                    <canvas id="volumeProgressChart"></canvas>
-                </div>
+            <div class="stat-item">
+                <i class="fas fa-dumbbell"></i>
+                <h3>Total Volume</h3>
+                <p class="stat-number">{{ "{:,}".format(total_volume) }}</p>
+                <p class="stat-category">kg</p>
+            </div>
+            <div class="stat-item">
+                <i class="fas fa-chart-line"></i>
+                <h3>Workouts</h3>
+                <p class="stat-number">{{ "{:,}".format(total_workouts) }}</p>
+                <p class="stat-category">sessions</p>
             </div>
         </div>
+        <div class="stats-charts">
+            <div class="chart-container">
+                <h3>Lift Progress</h3>
+                <canvas id="liftProgressChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <h3>Volume per Workout</h3>
+                <canvas id="volumeProgressChart"></canvas>
+            </div>
+            <div class="chart-container weekly-calories-chart-container">
+                <h3>Weekly Calories Burned</h3>
+                <canvas id="caloriesChart"></canvas>
+            </div>
+        </div>
+    </div>
 
-        <div class="profile-actions">
-            <a href="{{ url_for('edit_profile') }}" class="edit-profile-btn">
-                <i class="fas fa-edit"></i> Edit Profile
-            </a>
-        </div>
-    </section>
+    <div class="profile-actions">
+        <a href="{{ url_for('edit_profile') }}" class="edit-profile-btn">
+            <i class="fas fa-edit"></i> Edit Profile
+        </a>
+    </div>
+</section>
 {% endblock %}
 
 {% block scripts %}
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    <script>
-        async function loadWorkoutHistory() {
-            try {
-                const response = await fetch('/api/workout_history');
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const data = await response.json();
-                const historyData = data.weekly_data;
-                const topExercises = data.top_exercises;
-                
-                // Get the last 5 weeks of data
-                const weeks = Object.keys(historyData).slice(-5);
-                
-                // Define colors for the exercises
-                const colors = [
-                    { border: '#4CAF50', background: '#4CAF50' },  // Green
-                    { border: '#2196F3', background: '#2196F3' },  // Blue
-                    { border: '#FF9800', background: '#FF9800' }   // Orange
-                ];
-                
-                // Prepare datasets for the lift progress chart
-                const datasets = topExercises.map((exercise, index) => ({
-                    label: exercise.charAt(0).toUpperCase() + exercise.slice(1),  // Capitalize first letter
-                    data: weeks.map(week => historyData[week][exercise]),
-                    borderColor: colors[index].border,
-                    backgroundColor: colors[index].background,
-                    tension: 0.1
-                }));
-                
-                // Initialize the lift progress chart
-                const liftCtx = document.getElementById('liftProgressChart').getContext('2d');
-                new Chart(liftCtx, {
-                    type: 'line',
-                    data: {
-                        labels: weeks,
-                        datasets: datasets
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<script>
+    async function loadWorkoutHistory() {
+        try {
+            const response = await fetch('/api/workout_history');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            const historyData = data.weekly_data;
+            const topExercises = data.top_exercises;
+
+            // Get the last 5 weeks of data
+            const weeks = Object.keys(historyData).slice(-5);
+
+            // Define colors for the exercises
+            const colors = [
+                { border: '#4CAF50', background: '#4CAF50' },  // Green
+                { border: '#2196F3', background: '#2196F3' },  // Blue
+                { border: '#FF9800', background: '#FF9800' }   // Orange
+            ];
+
+            // Prepare datasets for the lift progress chart
+            const datasets = topExercises.map((exercise, index) => ({
+                label: exercise.charAt(0).toUpperCase() + exercise.slice(1),  // Capitalize first letter
+                data: weeks.map(week => historyData[week][exercise]),
+                borderColor: colors[index].border,
+                backgroundColor: colors[index].background,
+                tension: 0.1
+            }));
+
+            // Initialize the lift progress chart
+            const liftCtx = document.getElementById('liftProgressChart').getContext('2d');
+            new Chart(liftCtx, {
+                type: 'line',
+                data: {
+                    labels: weeks,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: 'Lift Progress (kg)'
+                        }
                     },
-                    options: {
-                        responsive: true,
-                        plugins: {
-                            legend: {
-                                position: 'top',
-                            },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
                             title: {
                                 display: true,
-                                text: 'Lift Progress (kg)'
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                title: {
-                                    display: true,
-                                    text: 'Weight (kg)'
-                                }
+                                text: 'Weight (kg)'
                             }
                         }
                     }
-                });
+                }
+            });
 
-                // Prepare data for the volume progress chart
-                const volumeCtx = document.getElementById('volumeProgressChart').getContext('2d');
-                new Chart(volumeCtx, {
-                    type: 'line',
+            // Prepare data for the volume progress chart
+            const volumeCtx = document.getElementById('volumeProgressChart').getContext('2d');
+            new Chart(volumeCtx, {
+                type: 'line',
+                data: {
+                    labels: weeks,
+                    datasets: [{
+                        label: 'Volume per Workout',
+                        data: weeks.map(week => historyData[week].total_volume),
+                        borderColor: '#4CAF50',
+                        tension: 0.1,
+                        fill: false,
+                        backgroundColor: '#4CAF50'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: 'Volume per Workout (kg)'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Volume (kg)'
+                            }
+                        }
+                    }
+                }
+            });
+        } catch (error) {
+            console.error("Error loading workout history:", error);
+        }
+    }
+
+    // Call this function when the page loads
+    document.addEventListener('DOMContentLoaded', function () {
+        loadWorkoutHistory();
+        loadWeeklyCaloriesChart();
+    });
+
+    function loadWeeklyCaloriesChart() {
+        fetch('/api/weekly_calories')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.error) {
+                    console.error("Error from API:", data.error, data.details || '');
+                    // Optionally display an error message on the page
+                    const caloriesChartCtx = document.getElementById('caloriesChart').getContext('2d');
+                    // Could display a message on the canvas or nearby element
+                    return;
+                }
+                const caloriesChartCtx = document.getElementById('caloriesChart').getContext('2d');
+                new Chart(caloriesChartCtx, {
+                    type: 'bar', // Bar chart for daily calories
                     data: {
-                        labels: weeks,
+                        labels: data.labels, // Should be day names like ['Mon', 'Tue', ...]
                         datasets: [{
-                            label: 'Volume per Workout',
-                            data: weeks.map(week => historyData[week].total_volume),
-                            borderColor: '#4CAF50',
-                            tension: 0.1,
-                            fill: false,
-                            backgroundColor: '#4CAF50'
+                            label: 'Calories Burned',
+                            data: data.calories, // Should be calorie values [1500, 1200, ...]
+                            backgroundColor: 'rgba(255, 159, 64, 0.5)', // Orange color
+                            borderColor: 'rgba(255, 159, 64, 1)',
+                            borderWidth: 1
                         }]
                     },
                     options: {
                         responsive: true,
+                        maintainAspectRatio: false,
                         plugins: {
                             legend: {
                                 position: 'top',
                             },
                             title: {
                                 display: true,
-                                text: 'Volume per Workout (kg)'
+                                text: 'Daily Calories Burned This Week'
                             }
                         },
                         scales: {
@@ -146,20 +214,23 @@
                                 beginAtZero: true,
                                 title: {
                                     display: true,
-                                    text: 'Volume (kg)'
+                                    text: 'Calories (kcal)'
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Day of the Week'
                                 }
                             }
                         }
                     }
                 });
-            } catch (error) {
-                console.error("Error loading workout history:", error);
-            }
-        }
-
-        // Call this function when the page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            loadWorkoutHistory();
-        });
-    </script>
+            })
+            .catch(error => {
+                console.error("Error fetching weekly calories data:", error);
+                // Optionally display an error message on the page
+            });
+    }
+</script>
 {% endblock %}

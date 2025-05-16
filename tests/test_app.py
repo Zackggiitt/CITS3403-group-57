@@ -55,7 +55,8 @@ class TestUserModel(unittest.TestCase):
     def test_user_to_dict(self):
         """Test 3: Test user to dictionary conversion"""
         with app.app_context():
-            user_dict = self.test_user.to_dict()
+            user = User.query.filter_by(email='test@example.com').first()
+            user_dict = user.to_dict()
             self.assertEqual(user_dict['email'], 'test@example.com')
             self.assertEqual(user_dict['first_name'], 'Test')
             self.assertEqual(user_dict['last_name'], 'User')
