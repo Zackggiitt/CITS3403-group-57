@@ -94,6 +94,7 @@
         // Provide CSRF token for AJAX requests if CSRF protection is enabled
         var csrfToken = "{{ csrf_token() if csrf_token else '' }}";
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     {% block scripts %}
     {% endblock %}
 </body>

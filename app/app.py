@@ -719,6 +719,53 @@ def chat():
         current_app.logger.error(f"OpenAI API call failed: {e}")
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/weekly_calories')
+@login_required
+def weekly_calories():
+    try:
+        today = datetime.now(timezone.utc).date()
+        seven_days_ago = today - timedelta(days=6)
+        # 1. Try to get actual saved workouts
+        daily_calories_query = db.session.query(
+            func.date(models.SavedWorkouts.save_date).label('date'),
+            func.sum(models.SavedWorkouts.calories_per_set * models.SavedWorkouts.sets).label('total_calories')
+        ).filter(
+            models.SavedWorkouts.user_id == current_user.id,
+            func.date(models.SavedWorkouts.save_date) >= seven_days_ago,
+            func.date(models.SavedWorkouts.save_date) <= today
+        ).group_by(
+            func.date(models.SavedWorkouts.save_date)
+        ).order_by(
+            func.date(models.SavedWorkouts.save_date)
+        ).all()
+
+        calories_data = { (seven_days_ago + timedelta(days=i)).strftime('%Y-%m-%d'): 0 for i in range(7) }
+        for record in daily_calories_query:
+            calories_data[record.date.strftime('%Y-%m-%d')] = record.total_calories if record.total_calories is not None else 0
+
+        # If all values are zero, fallback to planned workouts
+        if all(v == 0 for v in calories_data.values()):
+            # Get planned calories for each day of the week from WorkoutPlan
+            week_days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+            plan_entries = models.WorkoutPlan.query.filter_by(user_id=current_user.id).all()
+            plan_by_day = {day: [] for day in week_days}
+            for entry in plan_entries:
+                plan_by_day[entry.day_of_week.lower()].append(entry)
+            # Map the last 7 days to their weekday
+            sorted_dates = sorted(calories_data.keys())
+            for idx, date_str in enumerate(sorted_dates):
+                weekday = week_days[(seven_days_ago + timedelta(days=idx)).weekday()]
+                calories_data[date_str] = sum(e.calories_per_set * e.sets for e in plan_by_day[weekday])
+
+        sorted_dates = sorted(calories_data.keys())
+        labels = [datetime.strptime(date_str, '%Y-%m-%d').strftime('%a') for date_str in sorted_dates]
+        calories_values = [calories_data[date_str] for date_str in sorted_dates]
+
+        return jsonify({'labels': labels, 'calories': calories_values})
+    except Exception as e:
+        current_app.logger.error(f"Error fetching weekly calories: {e}")
+        return jsonify({'error': 'Failed to retrieve weekly calorie data', 'details': str(e)}), 500
+
 # Run the application in debug mode if this file is executed directly
 if __name__ == "__main__":
     app.run(debug=True)

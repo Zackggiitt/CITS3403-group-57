@@ -27,7 +27,8 @@ class User(UserMixin, db.Model): # Inherit from UserMixin
         return f'<User {self.email}>'
     
     def set_password(self, password):
-        # Hash and set user's password
+        if not isinstance(password, str) or not password:
+            raise TypeError("Password must be a non-empty string")
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):

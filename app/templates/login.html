@@ -1,43 +1,49 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <div class="login-container">
-        <form method="POST" class="login-form">
-            {% if error %}
-                <div class="error-message">{{ error }}</div>
-            {% endif %}
+<div class="login-container">
+    <form method="POST" class="login-form">
+        {% if error %}
+        <div class="error-message">{{ error }}</div>
+        {% endif %}
 
-            {{ form.hidden_tag() }} 
-            <h2>Login</h2>
-            
-            <div class="form-group">
-                {{ form.email.label }}
-                <div class="input-container">
-                    <i class="fas fa-envelope icon"></i>
-                    {{ form.email(class="form-control", placeholder="Enter Your Email") }}
-                </div>
-            </div>
-    
-            <div class="form-group">
-                {{ form.password.label }}
-                <div class="input-container">
-                    <i class="fas fa-lock icon"></i>
-                    {{ form.password(class="form-control", placeholder="Enter Your Password") }}
-                    <i class="fas fa-eye toggle-password" onclick="togglePasswordVisibility()"></i>
-                </div>
-                <p><a href="/forgot-password" class="forgot-password">Forgot Password?</a></p>
-            </div>
+        {{ form.hidden_tag() }}
+        <h2>Login</h2>
 
-            <div class="form-group remember-me">
-                {{ form.remember_me() }}                
-                {{ form.remember_me.label }}
+        <div class="form-group">
+            {{ form.email.label }}
+            <div class="input-container">
+                <i class="fas fa-envelope icon"></i>
+                {{ form.email(class="form-control", placeholder="Enter Your Email") }}
             </div>
+            {% for error in form.email.errors %}
+            <span class="error-message" style="color: red; font-size: 0.95em;">{{ error }}</span>
+            {% endfor %}
+        </div>
 
-            <button type="submit" class="submit-btn">Login</button>
-
-            <div class="link">
-                <p>Don't have an account? <a href="{{ url_for('signup') }}">Sign Up</a></p>
+        <div class="form-group">
+            {{ form.password.label }}
+            <div class="input-container">
+                <i class="fas fa-lock icon"></i>
+                {{ form.password(class="form-control", placeholder="Enter Your Password") }}
+                <i class="fas fa-eye toggle-password" onclick="togglePasswordVisibility()"></i>
             </div>
-        </form>
-    </div>
+            {% for error in form.password.errors %}
+            <span class="error-message" style="color: red; font-size: 0.95em;">{{ error }}</span>
+            {% endfor %}
+            <p><a href="/forgot-password" class="forgot-password">Forgot Password?</a></p>
+        </div>
+
+        <div class="form-group remember-me">
+            {{ form.remember_me() }}
+            {{ form.remember_me.label }}
+        </div>
+
+        <button type="submit" class="submit-btn">Login</button>
+
+        <div class="link">
+            <p>Don't have an account? <a href="{{ url_for('signup') }}">Sign Up</a></p>
+        </div>
+    </form>
+</div>
 {% endblock %}
