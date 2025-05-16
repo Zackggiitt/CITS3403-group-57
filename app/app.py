@@ -78,23 +78,23 @@ def login():
     form = LoginForm()
     error = None
 
-    if form.validate_on_submit():
-        email = form.email.data
-        password = form.password.data
+    if request.method == "POST":
+        email = request.form.get('email', '').strip()
+        password = request.form.get('password', '').strip()
         
-        # Query the database for the user
-        user = User.query.filter_by(email=email).first()
-        
-        # Verify hashed password
-        if user and check_password_hash(user.password_hash, password): # Corrected: user.password -> user.password_hash
-            # --- Use Flask-Login's login_user ---
-            login_user(user) # Log the user in
-            flash('Logged in successfully.') # Optional: Flash message
-            # Redirect to the page user tried to access before login, or profile if none
-            next_page = request.args.get('next')
-            return redirect(next_page or url_for("profile"))
-        else:
-            error = "Invalid email or password."
+        if not email or not password:
+            error = "Email and password are required."
+        elif form.validate_on_submit():
+            # Query the database for the user
+            user = User.query.filter_by(email=email).first()
+            # Verify hashed password
+            if user and check_password_hash(user.password_hash, password):
+                login_user(user)
+                flash('Logged in successfully.')
+                next_page = request.args.get('next')
+                return redirect(next_page or url_for("profile"))
+            else:
+                error = "Invalid email or password."
     
     return render_template("login.html", form=form, title="Login", error=error)
 
@@ -401,11 +401,9 @@ def get_submitted_this_week():
             })
 
         # Return the organized data
-        # Check if plan_data is empty and return appropriate response
-        if not plan_data:   
-             return jsonify({"message": "No workout plan found"}), 404
-        
+        # Return empty object with 200 status code if no data found
         return jsonify(plan_data), 200
+        
     except Exception as e:
         current_app.logger.error(f"Error fetching workout plan: {e}")
         return jsonify({"error": "Failed to retrieve workout plan"}), 500

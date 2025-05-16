@@ -126,7 +126,7 @@ class TestLoginRoute(unittest.TestCase):
             'password': ''
         }, follow_redirects=True)
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b'This field is required', response.data)
+        self.assertIn(b'Email and password are required', response.data)
 
 
 class TestWorkoutPlanSharing(unittest.TestCase):
