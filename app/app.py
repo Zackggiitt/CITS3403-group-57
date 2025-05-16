@@ -80,6 +80,12 @@ def create_app(config_class=Config):
     # Configure secret key (moved from global scope)
     app.secret_key = app.config.get('SECRET_KEY', os.environ.get("FLASK_SECRET_KEY"))
 
+    # Add CLI command to initialize database
+    @app.cli.command("init-db")
+    def init_db_command():
+        """Initialize the database."""
+        db.create_all()
+        print("Initialized the database.")
 
     return app
 
