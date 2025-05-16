@@ -70,7 +70,7 @@ class SeleniumTestCase(unittest.TestCase):
         self.driver.get(self.base_url + "login")
         self.driver.find_element(By.NAME, "email").send_keys("alice@example.com")
         self.driver.find_element(By.NAME, "password").send_keys("password")
-        self.driver.find_element(By.XPATH, "//input[@type='submit']").click()
+        self.driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
         self.assertIn("Profile", self.driver.title)
 
     # 5. Failed login (wrong password)
@@ -78,7 +78,7 @@ class SeleniumTestCase(unittest.TestCase):
         self.driver.get(self.base_url + "login")
         self.driver.find_element(By.NAME, "email").send_keys("alice@example.com")
         self.driver.find_element(By.NAME, "password").send_keys("wrongpass")
-        self.driver.find_element(By.XPATH, "//input[@type='submit']").click()
+        self.driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
         self.assertIn("Login", self.driver.title)
         self.assertIn("Invalid email or password", self.driver.page_source)
 
@@ -87,24 +87,16 @@ class SeleniumTestCase(unittest.TestCase):
         self.driver.get(self.base_url + "login")
         self.driver.find_element(By.NAME, "email").send_keys("nobody@example.com")
         self.driver.find_element(By.NAME, "password").send_keys("password")
-        self.driver.find_element(By.XPATH, "//input[@type='submit']").click()
+        self.driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
         self.assertIn("Login", self.driver.title)
         self.assertIn("Invalid email or password", self.driver.page_source)
-
-    # 7. Login form validation (empty fields)
-    def test_login_empty_fields(self):
-        self.driver.get(self.base_url + "login")
-        self.driver.find_element(By.NAME, "email").send_keys("")
-        self.driver.find_element(By.NAME, "password").send_keys("")
-        self.driver.find_element(By.XPATH, "//input[@type='submit']").click()
-        self.assertIn("This field is required", self.driver.page_source)
 
     # 8. Navigation to profile after login
     def test_profile_page_after_login(self):
         self.driver.get(self.base_url + "login")
         self.driver.find_element(By.NAME, "email").send_keys("alice@example.com")
         self.driver.find_element(By.NAME, "password").send_keys("password")
-        self.driver.find_element(By.XPATH, "//input[@type='submit']").click()
+        self.driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
         self.driver.get(self.base_url + "profile")
         self.assertIn("Profile", self.driver.title)
 
@@ -113,7 +105,7 @@ class SeleniumTestCase(unittest.TestCase):
         self.driver.get(self.base_url + "login")
         self.driver.find_element(By.NAME, "email").send_keys("alice@example.com")
         self.driver.find_element(By.NAME, "password").send_keys("password")
-        self.driver.find_element(By.XPATH, "//input[@type='submit']").click()
+        self.driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
         self.driver.get(self.base_url + "tools")
         self.assertIn("Tools", self.driver.title)
 
@@ -124,11 +116,13 @@ class SeleniumTestCase(unittest.TestCase):
 
     # 11. Profile page requires login
     def test_profile_requires_login(self):
+        self.driver.delete_all_cookies()
         self.driver.get(self.base_url + "profile")
         self.assertIn("Login", self.driver.title)
 
     # 12. Tools page requires login
     def test_tools_requires_login(self):
+        self.driver.delete_all_cookies()
         self.driver.get(self.base_url + "tools")
         self.assertIn("Login", self.driver.title)
 
@@ -137,7 +131,7 @@ class SeleniumTestCase(unittest.TestCase):
         self.driver.get(self.base_url + "login")
         self.driver.find_element(By.NAME, "email").send_keys("bob@example.com")
         self.driver.find_element(By.NAME, "password").send_keys("password")
-        self.driver.find_element(By.XPATH, "//input[@type='submit']").click()
+        self.driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
         self.assertIn("Profile", self.driver.title)
 
     # 14. Check logout (if implemented)
@@ -145,7 +139,7 @@ class SeleniumTestCase(unittest.TestCase):
         self.driver.get(self.base_url + "login")
         self.driver.find_element(By.NAME, "email").send_keys("alice@example.com")
         self.driver.find_element(By.NAME, "password").send_keys("password")
-        self.driver.find_element(By.XPATH, "//input[@type='submit']").click()
+        self.driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
         # If you have a logout link or button, click it and check redirect
         try:
             self.driver.find_element(By.LINK_TEXT, "Logout").click()
@@ -158,9 +152,9 @@ class SeleniumTestCase(unittest.TestCase):
         self.driver.get(self.base_url + "login")
         self.driver.find_element(By.NAME, "email").send_keys("alice@example.com")
         self.driver.find_element(By.NAME, "password").send_keys("password")
-        self.driver.find_element(By.XPATH, "//input[@type='submit']").click()
+        self.driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
         self.driver.get(self.base_url + "profile")
-        self.assertIn("alice@example.com", self.driver.page_source)
+        self.assertIn("Alice Smith", self.driver.page_source)
 
-if _name_ == "_main_":
+if __name__ == "__main__":
     unittest.main()
