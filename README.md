@@ -38,28 +38,31 @@ Jayden Nguyen 24217276
 ```
 ├── app
 │   ├── __init__.py
-│   ├── app.py
+│   ├── routes.py
 │   ├── models.py
 │   ├── forms.py
 │   ├── static
 │   │   ├── css
-│   │   ├── js
-│   └── templates
-│       ├── base.html
-│       ├── profile.html
-│       ├── login.html
-│       ├── signup.html
-│       ├── posts.html
-│       ├── workout_tools.html
-│       └── ...
-├── instance
-│   └── app.db
+│   │   └── js
+│   ├── templates
+│   │   ├── base.html
+│   │   ├── profile.html
+│   │   ├── login.html
+│   │   ├── signup.html
+│   │   ├── posts.html
+│   │   ├── workout_tools.html
+│   │   └── ...
+│   └── instance
+│       └── app.db
 ├── migrations
 ├── tests
-│   ├── __init__.py
+│   ├── test_selenium.py
 │   └── test_app.py
+├── .env
+├── .flaskenv
+├── .gitignore
 ├── config.py
-├── wsgi.py
+├── run.py
 ├── requirements.txt
 └── README.md
 ```
