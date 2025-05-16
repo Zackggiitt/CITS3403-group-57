@@ -6,7 +6,7 @@
     <div class="hero-content">
         <h1>Track Your Fitness Journey</h1>
         <p>Join FitPal to monitor your workouts, track progress, and share achievements with friends.</p>
-        <a href="{{ url_for('login') }}" class="cta-button">Get Started</a>
+        <a href="{{ url_for('main.login') }}" class="cta-button">Get Started</a>
     </div>
     <div class="hero-image">
         <img src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b" alt="Fitness Tracking">
@@ -36,13 +36,13 @@
             <i class="fas fa-comment-dots"></i>
             <h3>Community Posts</h3>
             <p>Connect with others in our fitness community and share your experiences.</p>
-            <a href="{{ url_for('posts') }}" class="tool-link">View Posts <i class="fas fa-arrow-right"></i></a>
+            <a href="{{ url_for('main.posts') }}" class="tool-link">View Posts <i class="fas fa-arrow-right"></i></a>
         </div>
         <div class="card">
             <i class="fas fa-toolbox"></i>
             <h3>Fitness Tools</h3>
             <p>Use our specialized fitness calculators and tools to optimize your workouts.</p>
-            <a href="{{ url_for('workout_tools') }}" class="tool-link">Explore Tools <i
+            <a href="{{ url_for('main.workout_tools') }}" class="tool-link">Explore Tools <i
                     class="fas fa-arrow-right"></i></a>
         </div>
     </div>

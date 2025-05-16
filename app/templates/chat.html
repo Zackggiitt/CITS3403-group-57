@@ -96,7 +96,7 @@
 
         // Send to backend and display AI reply
         try {
-            const response = await fetch("{{ url_for('chat') }}", {
+            const response = await fetch("{{ url_for('main.chat') }}", {
                 method: "POST",
                 headers: {
                     'Content-Type': 'application/json',
