@@ -1,4 +1,4 @@
-from flask import Flask, render_template, url_for, redirect, request, jsonify, current_app, flash # Import flash
+from flask import Flask, render_template, url_for, redirect, request, jsonify, current_app, flash, Blueprint # Added Blueprint
 from flask_wtf.csrf import CSRFProtect
 from werkzeug.security import generate_password_hash, check_password_hash
 from .forms import SignupForm, LoginForm, EditProfileForm
@@ -6,7 +6,7 @@ from config import Config # Import configuration
 from flask_sqlalchemy import SQLAlchemy # Import SQLAlchemy
 from flask_migrate import Migrate # Import Migrate
 # --- Flask-Login Imports ---
-from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user 
+from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 
 import os
 from dotenv import load_dotenv
@@ -20,60 +20,83 @@ import openai # Added for chatbot
 # Load environment variables from .env file
 load_dotenv()
 
-# Initialize Flask application with custom template and static folder paths
-app = Flask(__name__, 
-            template_folder="templates", 
-            static_folder="static",
-            instance_relative_config=True,
-            instance_path=Config.INSTANCE_FOLDER_PATH)
-
-# TODO: "FLASK_SECRET_KEY" is just a placeholder for now, ensure that it is set later
-app.secret_key = os.environ.get("FLASK_SECRET_KEY")
-
-csrf = CSRFProtect(app)
-
-# Load configuration from Config object
-# Use environment variable or default to 'config.Config'
-app.config.from_object(os.environ.get('APP_SETTINGS', 'config.Config'))
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-# OpenAI API Key Setup
-openai.api_key = app.config.get("OPENAI_API_KEY")
-
-# Initialize database and migration tool
-db = SQLAlchemy(app)
-migrate = Migrate(app, db)
-
-# --- Flask-Login Setup ---
+# Instantiate extensions globally
+db = SQLAlchemy()
+migrate = Migrate()
 login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'login' # Specifies the route Flask-Login redirects to when login is required
-login_manager.login_message = "Please log in to access this page." # Optional: Custom message
-login_manager.login_message_category = "info" # Optional: Flash message category
+csrf = CSRFProtect()
 
-# Import database models (must be after db initialization)
-from app import models
-from app.models import User # Explicitly import User model for clarity
+# Import database models (must be after db instantiation but before app-specific setup in create_app)
+# Models might need db object, but not the app itself yet.
+from . import models # Assuming models.py is in the same 'app' package, adjusted for clarity
+# from app.models import User # This specific import might need to be inside create_app or after blueprint if it causes circular issues
 
-# --- User Loader Callback ---
-# This callback is used to reload the user object from the user ID stored in the session
+# Define the main blueprint
+main_bp = Blueprint('main', __name__, template_folder='templates', static_folder='static')
+
+# --- User Loader Callback for Flask-Login (associated with login_manager) ---
+# This callback is used to reload the user object from the user ID stored in the session.
+# It's defined here as it's closely tied to login_manager, which is global.
+# It will be configured with the app instance inside create_app.
 @login_manager.user_loader
 def load_user(user_id):
     # Since user_id is just the primary key of our user table, use it directly
-    return User.query.get(int(user_id))
+    return models.User.query.get(int(user_id)) # models.User should be accessible here
+
+def create_app(config_class=Config):
+    app = Flask(__name__,
+                template_folder="templates", # Default template folder for the app
+                static_folder="static",   # Default static folder for the app
+                instance_relative_config=True,
+                instance_path=os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'instance')) # Point to instance folder at project root level
+    
+    app.config.from_object(config_class)
+
+    # Initialize extensions with the app instance
+    csrf.init_app(app)
+    db.init_app(app)
+    migrate.init_app(app, db)
+    login_manager.init_app(app)
+    
+    login_manager.login_view = 'main.login' # Adjusted for blueprint
+    login_manager.login_message = "Please log in to access this page."
+    login_manager.login_message_category = "info"
+
+    # OpenAI API Key Setup
+    if app.config.get("OPENAI_API_KEY"):
+        openai.api_key = app.config.get("OPENAI_API_KEY")
+    else:
+        app.logger.warning("OPENAI_API_KEY not set in config. Chatbot functionality might be affected.")
+
+
+    # Register the blueprint
+    # All routes are defined below and attached to main_bp
+    app.register_blueprint(main_bp)
+    
+    # Ensure the instance folder exists (moved from Config to here, as app.instance_path is now set)
+    if not os.path.exists(app.instance_path):
+        os.makedirs(app.instance_path)
+        
+    # Configure secret key (moved from global scope)
+    app.secret_key = app.config.get('SECRET_KEY', os.environ.get("FLASK_SECRET_KEY"))
+
+
+    return app
+
+# --- Routes are now part of the main_bp blueprint ---
 
 # Define route for the home page
-@app.route("/")
+@main_bp.route("/")
 def index():
     return render_template("index.html", title='Home')
 
-@app.route("/chat_page") # Route for displaying the chat page
+@main_bp.route("/chat_page") # Route for displaying the chat page
 @login_required # Optional: if you want chat page to be login protected
 def chat_page():
     return render_template("chat.html", title="Chat with FitPal AI")
 
 # Define route for the login page
-@app.route("/login", methods=["GET", "POST"])
+@main_bp.route("/login", methods=["GET", "POST"])
 def login():
     form = LoginForm()
     error = None
@@ -86,20 +109,20 @@ def login():
             error = "Email and password are required."
         elif form.validate_on_submit():
             # Query the database for the user
-            user = User.query.filter_by(email=email).first()
+            user = models.User.query.filter_by(email=email).first()
             # Verify hashed password
             if user and check_password_hash(user.password_hash, password):
                 login_user(user)
                 flash('Logged in successfully.')
                 next_page = request.args.get('next')
-                return redirect(next_page or url_for("profile"))
+                return redirect(next_page or url_for("main.profile"))
             else:
                 error = "Invalid email or password."
     
     return render_template("login.html", form=form, title="Login", error=error)
 
 # Define route for the signup page
-@app.route("/signup", methods=["GET", "POST"])
+@main_bp.route("/signup", methods=["GET", "POST"])
 def signup():
     form = SignupForm()
     error = None
@@ -108,7 +131,7 @@ def signup():
         email = form.email.data
         
         # Check if the user already exists in the database
-        existing_user = User.query.filter_by(email=email).first()
+        existing_user = models.User.query.filter_by(email=email).first()
         if existing_user:
             error = "User already exists with that email."
             return render_template("signup.html", form=form, title="Sign Up", error=error)
@@ -117,7 +140,7 @@ def signup():
         hashed_password = generate_password_hash(form.password.data)
         
         # Create a new user and add to the database
-        new_user = User(
+        new_user = models.User(
             first_name=form.first_name.data,
             last_name=form.last_name.data,
             email=email,
@@ -129,12 +152,12 @@ def signup():
         db.session.commit()
 
         flash("Account created successfully! Please log in.")
-        return redirect(url_for("login"))
+        return redirect(url_for("main.login"))
     
     return render_template("signup.html", form=form, title="Sign Up", error=error)
 
 # Define route for the posts page
-@app.route("/posts")
+@main_bp.route("/posts")
 @login_required # Add decorator to require login for this page
 def posts():
     # --- Get current user's workout plan ---
@@ -220,7 +243,7 @@ def posts():
     )
 
 # Define route for the user profile page
-@app.route("/profile")
+@main_bp.route("/profile")
 @login_required # Add decorator to require login for this page
 def profile():
     # Calculate total volume from saved workouts
@@ -246,7 +269,7 @@ def profile():
         total_workouts=total_workouts
     )
 
-@app.route("/edit_profile", methods=['GET', 'POST'])
+@main_bp.route("/edit_profile", methods=['GET', 'POST'])
 @login_required
 def edit_profile():
     form = EditProfileForm()
@@ -257,7 +280,7 @@ def edit_profile():
         current_user.bmr = form.bmr.data
         db.session.commit()
         flash('Your profile has been updated.')
-        return redirect(url_for('profile'))
+        return redirect(url_for('main.profile'))
     elif request.method == 'GET':
         form.first_name.data = current_user.first_name
         form.last_name.data = current_user.last_name
@@ -265,7 +288,7 @@ def edit_profile():
         form.bmr.data = current_user.bmr
     return render_template('edit_profile.html', title='Edit Profile', form=form)
 
-@app.route("/api/workout_history", methods=['GET'])
+@main_bp.route("/api/workout_history", methods=['GET'])
 @login_required
 def get_workout_history():
     """Fetches the user's workout history for the graphs"""
@@ -333,13 +356,14 @@ def get_workout_history():
     except Exception as e:
         current_app.logger.error(f"Error fetching workout history: {e}")
         return jsonify({"error": "Failed to retrieve workout history"}), 500
+
 # Define route for the workout tools page
-@app.route("/tools")
+@main_bp.route("/tools")
 @login_required # Add decorator to require login for this page
 def workout_tools():
     return render_template("workout_tools.html", title="Tools")
 
-@app.route("/api/workout_plan", methods=['GET'])
+@main_bp.route("/api/workout_plan", methods=['GET'])
 def get_workout_plan():
     """Fetches the entire workout plan from the database."""
     try:
@@ -367,7 +391,7 @@ def get_workout_plan():
         current_app.logger.error(f"Error fetching workout plan: {e}")
         return jsonify({"error": "Failed to retrieve workout plan"}), 500
 
-@app.route("/api/get_saved_workout", methods=['GET'])
+@main_bp.route("/api/get_saved_workout", methods=['GET'])
 def get_submitted_this_week():
     """Fetches the workout plan submitted this week"""
     try:
@@ -408,7 +432,7 @@ def get_submitted_this_week():
         current_app.logger.error(f"Error fetching workout plan: {e}")
         return jsonify({"error": "Failed to retrieve workout plan"}), 500
 
-@app.route("/api/workout_plan", methods=['POST'])
+@main_bp.route("/api/workout_plan", methods=['POST'])
 @login_required # Secure this API endpoint
 def save_workout_plan():
     """Saves the workout plan received from the frontend."""
@@ -487,7 +511,7 @@ def save_workout_plan():
         traceback.print_exc() # Print detailed traceback to server logs
         return jsonify({"error": "Failed to save workout plan", "details": str(e)}), 500
 
-@app.route("/api/save_workout", methods=['POST'])
+@main_bp.route("/api/save_workout", methods=['POST'])
 @login_required
 def save_workout():
     """Saves the current workout plan to saved_workouts table with a date."""
@@ -545,7 +569,7 @@ def save_workout():
         current_app.logger.error(f"Error saving workout: {e}")
         return jsonify({"error": "Failed to save workout", "details": str(e)}), 500
 
-@app.route("/api/shared_workout_history/<int:user_id>", methods=['GET'])
+@main_bp.route("/api/shared_workout_history/<int:user_id>", methods=['GET'])
 @login_required
 def get_shared_workout_history(user_id):
     """Fetches the workout history for a shared user"""
@@ -623,7 +647,7 @@ def get_shared_workout_history(user_id):
         current_app.logger.error(f"Error fetching shared workout history: {e}")
         return jsonify({"error": "Failed to retrieve shared workout history"}), 500
 
-@app.route("/api/share_plan", methods=['POST'])
+@main_bp.route("/api/share_plan", methods=['POST'])
 @login_required 
 def share_plan(): # Renamed function
     """
@@ -645,7 +669,7 @@ def share_plan(): # Renamed function
         return jsonify({"error": "Missing recipientEmail in request body"}), 400
 
     # Find the recipient user by email
-    recipient_user = User.query.filter_by(email=recipient_email).first()
+    recipient_user = models.User.query.filter_by(email=recipient_email).first()
 
     if not recipient_user:
         current_app.logger.warning(f"Recipient user not found: {recipient_email}")
@@ -685,14 +709,14 @@ def share_plan(): # Renamed function
         return jsonify({"error": "Failed to create share record in database.", "details": str(e)}), 500
 
 # --- Logout Route ---
-@app.route("/logout")
+@main_bp.route("/logout")
 @login_required # Ensure user is logged in to log out
 def logout():
     logout_user() # Log the user out
     flash("You have been logged out.")
-    return redirect(url_for("login"))
+    return redirect(url_for("main.login"))
 
-@app.route('/chat', methods=['POST'])
+@main_bp.route('/chat', methods=['POST'])
 @login_required # Optional: Make chatbot only available to logged-in users
 def chat():
     user_message = request.json.get('message', '')
@@ -717,7 +741,7 @@ def chat():
         current_app.logger.error(f"OpenAI API call failed: {e}")
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/weekly_calories')
+@main_bp.route('/api/weekly_calories')
 @login_required
 def weekly_calories():
     try:
@@ -765,5 +789,6 @@ def weekly_calories():
         return jsonify({'error': 'Failed to retrieve weekly calorie data', 'details': str(e)}), 500
 
 # Run the application in debug mode if this file is executed directly
-if __name__ == "__main__":
-    app.run(debug=True)
+# This section should be removed or moved to a run.py / wsgi.py file
+# if __name__ == "__main__":
+# app.run(debug=True)

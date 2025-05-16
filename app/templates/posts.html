@@ -40,10 +40,10 @@
     {% else %}
     <div class="post-placeholder card">
         {% if current_user and current_user.is_authenticated %}
-        <p>No workout plan found for you yet. Visit <a href="{{ url_for('workout_tools') }}">Workout Tools</a> to create
+        <p>No workout plan found for you yet. Visit <a href="{{ url_for('main.workout_tools') }}">Workout Tools</a> to create
             one!</p>
         {% else %}
-        <p>No workout plan found. Please <a href="{{ url_for('login') }}">login</a> to see your plans.</p>
+        <p>No workout plan found. Please <a href="{{ url_for('main.login') }}">login</a> to see your plans.</p>
         {% endif %}
     </div>
     {% endif %}
@@ -104,7 +104,7 @@
         {% if current_user and current_user.is_authenticated %}
         <p>No workout plans have been shared with you ({{ current_user.email }}) yet.</p>
         {% else %}
-        <p>No workout plans have been shared with you yet. Please <a href="{{ url_for('login') }}">login</a>.</p>
+        <p>No workout plans have been shared with you yet. Please <a href="{{ url_for('main.login') }}">login</a>.</p>
         {% endif %}
     </div>
     {% endif %}

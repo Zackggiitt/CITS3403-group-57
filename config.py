@@ -21,3 +21,10 @@ class Config:
     
     # OpenAI API Key
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+class TestingConfig(Config):
+    TESTING = True
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+    # In-memory SQLite database for tests
+    WTF_CSRF_ENABLED = False # Disable CSRF forms protection in testing
+    SECRET_KEY = 'test-secret-key' # Add a specific secret key for testing
