@@ -15,7 +15,7 @@ logger = logging.getLogger('alembic.env')
 
 # --- Add import for your app's db instance and models --- 
 # Adjust the import path based on your project structure
-from app.app import db 
+from app import db 
 
 
 
